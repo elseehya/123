@@ -555,118 +555,116 @@
             });
         }
 
-        // Create Interactive Sector Comparison chart on page load
-        createInteractiveSectorComparison();
+      <div id="sector-comparison">
+    <h2>Interactive Sector Comparison</h2>
+</div>
+        function createInteractiveSectorComparison() {
+    const width = 800;
+    const height = 600;
+    const margin = {top: 20, right: 30, bottom: 40, left: 50};
 
-        // Tooltip functions
-        function showTooltip(event, text) {
-            const tooltip = d3.select("body").append("div")
-                .attr("class", "tooltip")
-                .style("opacity", 0);
+    const svg = d3.select("#sector-comparison")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            tooltip.transition()
-                .duration(200)
-                .style("opacity", .9);
-            tooltip.html(text)
-                .style("left", (event.pageX) + "px")
-                .style("top", (event.pageY - 28) + "px");
-        }
+    const sectors = ["Oil", "Non-Oil", "Tourism", "Technology", "Renewable Energy", "Healthcare", "Education"];
+    const years = [2016, 2024, 2030];
 
-        function hideTooltip() {
-            d3.select(".tooltip").remove();
-        }
+    const sectorData = {
+        Oil: [87, 50, 35],
+        "Non-Oil": [6, 30, 35],
+        Tourism: [2, 10, 15],
+        Technology: [1, 5, 10],
+        "Renewable Energy": [0, 5, 10],
+        Healthcare: [2, 5, 7],
+        Education: [2, 8, 8]
+    };
 
-        // Detailed Sector Information
-        function showDetailedSectorInfo(sector, year, value) {
-            const detailsDiv = d3.select("#details");
-            detailsDiv.html("");
-            detailsDiv.append("h2").text(`${sector} Sector in ${year}`);
-            detailsDiv.append("p").text(`Contribution to GDP: ${value}%`);
+    const xScale = d3.scaleBand()
+        .domain(sectors)
+        .range([0, width])
+        .padding(0.1);
 
-            // Add more detailed information based on the sector and year
-            const sectorInfo = getSectorInfo(sector, year);
-            detailsDiv.append("p").text(sectorInfo.description);
-            detailsDiv.append("h3").text("Key Initiatives:");
-            const ul = detailsDiv.append("ul");
-            sectorInfo.initiatives.forEach(initiative => {
-                ul.append("li").text(initiative);
-            });
+    const yScale = d3.scaleLinear()
+        .domain([0, 100])
+        .range([height, 0]);
 
-            // Add a small chart showing the sector's trend
-            const trendData = getTrendData(sector);
-            createTrendChart(detailsDiv, trendData, sector);
-        }
+    const colorScale = d3.scaleOrdinal()
+        .domain(years)
+        .range(["#00ffff", "#0077be", "#005f9e"]);
 
-        function getSectorInfo(sector, year) {
-            // This function would return detailed information about each sector
-            // For brevity, I'll just return placeholder data
-            return {
-                description: `The ${sector} sector has shown significant changes from 2016 to 2030, reflecting the goals of Vision 2030.`,
-                initiatives: [
-                    "Investment in new technologies",
-                    "Workforce development programs",
-                    "International partnerships",
-                    "Regulatory reforms"
-                ]
-            };
-        }
+    sectors.forEach(sector => {
+        years.forEach((year, index) => {
+            svg.append("rect")
+                .attr("x", xScale(sector) + (index * xScale.bandwidth() / 3))
+                .attr("y", yScale(sectorData[sector][index]))
+                .attr("width", xScale.bandwidth() / 3)
+                .attr("height", height - yScale(sectorData[sector][index]))
+                .attr("fill", colorScale(year))
+                .on("mouseover", function(event) {
+                    d3.select(this).attr("opacity", 0.8);
+                    showTooltip(event, `${sector} in ${year}: ${sectorData[sector][index]}%`);
+                })
+                .on("mouseout", function() {
+                    d3.select(this).attr("opacity", 1);
+                    hideTooltip();
+                });
+        });
+    });
 
-        function getTrendData(sector) {
-            // This function would return historical and projected data for the sector
-            // For brevity, I'll just return placeholder data
-            return [
-                {year: 2016, value: Math.random() * 100},
-                {year: 2020, value: Math.random() * 100},
-                {year: 2024, value: Math.random() * 100},
-                {year: 2028, value: Math.random() * 100},
-                {year: 2030, value: Math.random() * 100}
-            ];
-        }
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(xScale));
 
-        function createTrendChart(container, data, sector) {
-            const width = 300;
-            const height = 200;
-            const margin = {top: 20, right: 20, bottom: 30, left: 40};
+    svg.append("g")
+        .call(d3.axisLeft(yScale));
 
-            const svg = container.append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+    // Add legend
+    const legend = svg.append("g")
+        .attr("class", "legend")
+        .attr("transform", `translate(${width - 100}, 20)`);
 
-            const x = d3.scaleLinear()
-                .domain(d3.extent(data, d => d.year))
-                .range([0, width]);
+    years.forEach((year, i) => {
+        legend.append("rect")
+            .attr("x", 0)
+            .attr("y", i * 25)
+            .attr("width", 20)
+            .attr("height", 20)
+            .attr("fill", colorScale(year));
 
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(data, d => d.value)])
-                .range([height, 0]);
+        legend.append("text")
+            .attr("x", 30)
+            .attr("y", i * 25 + 15)
+            .text(year);
+    });
+}
+function showTooltip(event, text) {
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0)
+        .style("position", "absolute")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "1px")
+        .style("border-radius", "5px")
+        .style("padding", "10px");
 
-            const line = d3.line()
-                .x(d => x(d.year))
-                .y(d => y(d.value));
+    tooltip.transition()
+        .duration(200)
+        .style("opacity", .9);
+    tooltip.html(text)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 28) + "px");
+}
 
-            svg.append("g")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x).ticks(5));
-
-            svg.append("g")
-                .call(d3.axisLeft(y));
-
-            svg.append("path")
-                .datum(data)
-                .attr("fill", "none")
-                .attr("stroke", "steelblue")
-                .attr("stroke-width", 1.5)
-                .attr("d", line);
-
-            svg.append("text")
-                .attr("x", width / 2)
-                .attr("y", 0)
-                .attr("text-anchor", "middle")
-                .text(`${sector} Historical Trend`);
-        }
-
+function hideTooltip() {
+    d3.select(".tooltip").remove();
+}
+// Call the function to create the visualization
+createInteractiveSectorComparison();
         // Initialize all components
         function initializeAllComponents() {
             createPieChart(2000);
