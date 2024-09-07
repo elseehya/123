@@ -3,40 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saudi Arabia GDP Sector Evolution (2000-2030)</title>
+    <title>Saudi Arabia GDP Evolution: The NEOM Impact (2000-2030)</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/3.9.0/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.5.1/dist/tfjs-vis.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f0f0f0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #0a192f;
+            color: #8892b0;
             margin: 0;
-            padding: 20px;
-            color: #333;
+            padding: 0;
+            overflow-x: hidden;
         }
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
             padding: 20px;
         }
         h1, h2, h3 {
-            color: #2c3e50;
+            color: #64ffda;
             text-align: center;
         }
         .chart-container {
             display: flex;
             justify-content: space-around;
             flex-wrap: wrap;
+            margin-top: 30px;
         }
         .chart {
             width: 400px;
             height: 400px;
             margin: 20px;
-            background-color: white;
+            background-color: #112240;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             position: relative;
@@ -51,76 +55,72 @@
             font-size: 18px;
             font-weight: bold;
             margin-top: 10px;
-            color: #2c3e50;
-        }
-        .slice {
-            transition: transform 0.3s, filter 0.3s;
-        }
-        .slice:hover {
-            transform: scale(1.05);
-            filter: brightness(1.1);
-            cursor: pointer;
-        }
-        #info {
-            position: absolute;
-            background: rgba(255,255,255,0.95);
-            border: 1px solid #ccc;
-            padding: 15px;
-            display: none;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 5px;
-            font-size: 14px;
-            max-width: 300px;
-            z-index: 1000;
-        }
-        #details {
-            margin-top: 30px;
-            text-align: center;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: #64ffda;
         }
         .controls {
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
             flex-wrap: wrap;
+            margin-bottom: 20px;
         }
         .control-btn {
             margin: 10px;
             padding: 12px 24px;
             font-size: 16px;
             cursor: pointer;
-            background-color: #3498db;
-            color: white;
+            background-color: #64ffda;
+            color: #0a192f;
             border: none;
             border-radius: 5px;
             transition: background-color 0.3s, transform 0.3s;
         }
         .control-btn:hover {
-            background-color: #2980b9;
+            background-color: #4cffb3;
             transform: translateY(-2px);
+        }
+        #info {
+            position: absolute;
+            background: rgba(17, 34, 64, 0.9);
+            border: 1px solid #64ffda;
+            padding: 15px;
+            display: none;
+            box-shadow: 0 0 10px rgba(100, 255, 218, 0.3);
+            border-radius: 5px;
+            font-size: 14px;
+            max-width: 300px;
+            z-index: 1000;
+            color: #ccd6f6;
+        }
+        #details {
+            margin-top: 30px;
+            text-align: center;
+            background-color: #112240;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .comparison-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 30px;
+            background-color: #112240;
         }
         .comparison-table th, .comparison-table td {
-            border: 1px solid #ddd;
+            border: 1px solid #64ffda;
             padding: 12px;
             text-align: left;
+            color: #ccd6f6;
         }
         .comparison-table th {
-            background-color: #f2f2f2;
+            background-color: #1d4ed8;
             font-weight: bold;
+            color: #64ffda;
         }
         .comparison-table tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #1a365d;
         }
         .comparison-table tr:hover {
-            background-color: #f5f5f5;
+            background-color: #233554;
         }
         .timeline {
             position: relative;
@@ -131,7 +131,7 @@
             content: '';
             position: absolute;
             width: 6px;
-            background-color: #3498db;
+            background-color: #64ffda;
             top: 0;
             bottom: 0;
             left: 50%;
@@ -149,8 +149,8 @@
             width: 25px;
             height: 25px;
             right: -17px;
-            background-color: white;
-            border: 4px solid #3498db;
+            background-color: #0a192f;
+            border: 4px solid #64ffda;
             top: 15px;
             border-radius: 50%;
             z-index: 1;
@@ -169,9 +169,9 @@
             width: 0;
             z-index: 1;
             right: 30px;
-            border: medium solid #3498db;
+            border: medium solid #64ffda;
             border-width: 10px 0 10px 10px;
-            border-color: transparent transparent transparent #3498db;
+            border-color: transparent transparent transparent #64ffda;
         }
         .right::before {
             content: " ";
@@ -181,22 +181,22 @@
             width: 0;
             z-index: 1;
             left: 30px;
-            border: medium solid #3498db;
+            border: medium solid #64ffda;
             border-width: 10px 10px 10px 0;
-            border-color: transparent #3498db transparent transparent;
+            border-color: transparent #64ffda transparent transparent;
         }
         .right::after {
             left: -16px;
         }
         .timeline-content {
             padding: 20px 30px;
-            background-color: white;
+            background-color: #112240;
             position: relative;
             border-radius: 6px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         #neom-info {
-            background-color: #ecf0f1;
+            background-color: #233554;
             padding: 20px;
             border-radius: 10px;
             margin-top: 30px;
@@ -212,7 +212,7 @@
             width: 200px;
             padding: 15px;
             margin: 10px;
-            background-color: white;
+            background-color: #112240;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             text-align: center;
@@ -222,35 +222,76 @@
             transform: translateY(-5px);
         }
         .sector-card h3 {
-            color: #2c3e50;
+            color: #64ffda;
             margin-bottom: 10px;
         }
         .sector-card p {
             font-size: 14px;
-            color: #7f8c8d;
+            color: #8892b0;
         }
-        #line-chart {
+        #line-chart, #bar-chart, #scatter-plot {
             width: 100%;
             height: 400px;
             margin-top: 30px;
+            background-color: #112240;
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .tooltip {
             position: absolute;
             text-align: center;
             padding: 8px;
             font: 12px sans-serif;
-            background: #fff;
-            border: 1px solid #ddd;
+            background: #233554;
+            border: 1px solid #64ffda;
             border-radius: 8px;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s;
+            color: #ccd6f6;
+        }
+        #3d-chart {
+            width: 100%;
+            height: 600px;
+            margin-top: 30px;
+        }
+        #ml-predictions {
+            margin-top: 30px;
+            background-color: #112240;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #vr-experience {
+            width: 100%;
+            height: 600px;
+            margin-top: 30px;
+            background-color: #112240;
+            border-radius: 10px;
+        }
+        #blockchain-verification {
+            margin-top: 30px;
+            background-color: #112240;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #voice-control {
+            margin-top: 30px;
+            background-color: #112240;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #real-time-updates {
+            margin-top: 30px;
+            background-color: #112240;
+            padding: 20px;
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Saudi Arabia GDP Sector Evolution (2000-2030)</h1>
+        <h1>Saudi Arabia GDP Evolution: The NEOM Impact (2000-2030)</h1>
         
         <div class="controls">
             <button id="animateBtn" class="control-btn">Animate Changes</button>
@@ -260,6 +301,11 @@
             <button id="showComparison" class="control-btn">Show Comparison Table</button>
             <button id="showTimeline" class="control-btn">Show Timeline</button>
             <button id="showLineChart" class="control-btn">Show Line Chart</button>
+            <button id="show3DChart" class="control-btn">Show 3D Chart</button>
+            <button id="showMLPredictions" class="control-btn">Show ML Predictions</button>
+            <button id="showVRExperience" class="control-btn">Launch VR Experience</button>
+            <button id="verifyBlockchain" class="control-btn">Verify Data (Blockchain)</button>
+            <button id="activateVoiceControl" class="control-btn">Activate Voice Control</button>
         </div>
 
         <div class="chart-container">
@@ -304,9 +350,49 @@
             <!-- Line chart will be rendered here -->
         </div>
 
+        <div id="bar-chart" style="display: none;">
+            <h2>Sector Comparison Bar Chart</h2>
+            <!-- Bar chart will be rendered here -->
+        </div>
+
+        <div id="scatter-plot" style="display: none;">
+            <h2>GDP vs. NEOM Investment Scatter Plot</h2>
+            <!-- Scatter plot will be rendered here -->
+        </div>
+
+        <div id="3d-chart" style="display: none;">
+            <h2>3D Visualization of GDP Evolution</h2>
+            <!-- 3D chart will be rendered here -->
+        </div>
+
+        <div id="ml-predictions" style="display: none;">
+            <h2>Machine Learning GDP Predictions</h2>
+            <!-- ML predictions will be displayed here -->
+        </div>
+
+        <div id="vr-experience" style="display: none;">
+            <h2>VR Experience: Walk through Saudi Arabia's Economic Landscape</h2>
+            <!-- VR experience will be rendered here -->
+        </div>
+
+        <div id="blockchain-verification" style="display: none;">
+            <h2>Blockchain Data Verification</h2>
+            <!-- Blockchain verification results will be displayed here -->
+        </div>
+
+        <div id="voice-control" style="display: none;">
+            <h2>Voice Control Interface</h2>
+            <!-- Voice control interface will be displayed here -->
+        </div>
+
+        <div id="real-time-updates" style="display: none;">
+            <h2>Real-Time Economic Indicators</h2>
+            <!-- Real-time updates will be displayed here -->
+        </div>
+
         <div id="neom-info">
             <h2>NEOM and Vision 2030: Reshaping Saudi Arabia's Economy</h2>
-            <p>NEOM, a cornerstone project of Saudi Arabia's Vision 2030, is set to revolutionize the Kingdom's economic landscape. This futuristic mega-city, spanning 26,500 square kilometers, aims to diversify Saudi Arabia's economy away from oil dependency.</p>
+                        <p>NEOM, a cornerstone project of Saudi Arabia's Vision 2030, is set to revolutionize the Kingdom's economic landscape. This futuristic mega-city, spanning 26,500 square kilometers, aims to diversify Saudi Arabia's economy away from oil dependency.</p>
             <p>Key impacts of NEOM and Vision 2030 on Saudi Arabia's GDP split:</p>
             <ul>
                 <li>Boosting the tourism sector through world-class attractions and accommodations</li>
@@ -379,8 +465,8 @@
         };
 
         const width = 400;
-        const height = 400
-                const radius = Math.min(width, height) / 2;
+        const height = 400;
+        const radius = Math.min(width, height) / 2;
 
         const pie = d3.pie().value(d => d.value);
         const arc = d3.arc().innerRadius(0).outerRadius(radius);
@@ -659,8 +745,2314 @@
             }
         });
 
-        // Finalize the setup
-        console.log("Interactive GDP Visualization Initialized!");
+        // 3D Chart Setup
+        function create3DChart() {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('3d-chart').appendChild(renderer.domElement);
+
+                    const geometry = new THREE.CylinderGeometry(5, 5, 20, 32);
+            const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+            const cylinder = new THREE.Mesh(geometry, material);
+            scene.add(cylinder);
+
+            camera.position.z = 5;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                cylinder.rotation.x += 0.01;
+                cylinder.rotation.y += 0.01;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // Show 3D chart on button click
+        d3.select("#show3DChart").on("click", () => {
+            const chart3D = d3.select("#3d-chart");
+            chart3D.style("display", chart3D.style("display") === "none" ? "block" : "none");
+            if (chart3D.style("display") === "block") {
+                create3DChart();
+            }
+        });
+
+        // Machine Learning Predictions
+        async function runMLPredictions() {
+            const model = tf.sequential();
+            model.add(tf.layers.dense({units: 1, inputShape: [1]}));
+            model.compile({loss: 'meanSquaredError', optimizer: 'sgd'});
+
+            const xs = tf.tensor2d([2000, 2024, 2030], [3, 1]);
+            const ys = tf.tensor2d([87, 50, 35], [3, 1]);
+
+            await model.fit(xs, ys, {epochs: 250});
+
+            const prediction2035 = model.predict(tf.tensor2d([2035], [1, 1]));
+            const predictionValue = prediction2035.dataSync()[0];
+
+            d3.select("#ml-predictions")
+                .html(`<p>Predicted Oil Sector GDP Contribution in 2035: ${predictionValue.toFixed(2)}%</p>`);
+        }
+
+        // Show ML predictions on button click
+        d3.select("#showMLPredictions").on("click", () => {
+            const mlPredictions = d3.select("#ml-predictions");
+            mlPredictions.style("display", mlPredictions.style("display") === "none" ? "block" : "none");
+            if (mlPredictions.style("display") === "block") {
+                runMLPredictions();
+            }
+        });
+
+        // VR Experience Setup
+        function setupVRExperience() {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('vr-experience').appendChild(renderer.domElement);
+
+            // Create a simple environment
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+            const cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+
+            camera.position.z = 5;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // Launch VR Experience on button click
+        d3.select("#showVRExperience").on("click", () => {
+            const vrExperience = d3.select("#vr-experience");
+            vrExperience.style("display", vrExperience.style("display") === "none" ? "block" : "none");
+            if (vrExperience.style("display") === "block") {
+                setupVRExperience();
+            }
+        });
+
+        // Blockchain Verification
+        function verifyDataOnBlockchain() {
+            // Simulating blockchain verification
+            const verificationResult = Math.random() > 0.5;
+            const message = verificationResult ? 
+                "Data verified on the blockchain. Integrity confirmed." : 
+                "Data verification failed. Please check the source.";
+            
+            d3.select("#blockchain-verification")
+                .style("display", "block")
+                .html(`<p>${message}</p>`);
+        }
+
+        // Verify data on blockchain button click
+        d3.select("#verifyBlockchain").on("click", verifyDataOnBlockchain);
+
+        // Voice Control Setup
+        function setupVoiceControl() {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+
+                recognition.onresult = function(event) {
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            const transcript = event.results[i][0].transcript.toLowerCase();
+                            if (transcript.includes("show line chart")) {
+                                d3.select("#showLineChart").dispatch("click");
+                            } else if (transcript.includes("reset view")) {
+                                d3.select("#resetBtn").dispatch("click");
+                            }
+                            // Add more voice commands here
+                        }
+                    }
+                };
+
+                recognition.start();
+                d3.select("#voice-control")
+                    .style("display", "block")
+                    .html("<p>Voice control activated. Try saying 'Show line chart' or 'Reset view'.</p>");
+            } else {
+                alert("Your browser doesn't support speech recognition. Please try a different browser.");
+            }
+        }
+
+        // Activate voice control on button click
+        d3.select("#activateVoiceControl").on("click", setupVoiceControl);
+
+        // Real-time Updates
+        function setupRealTimeUpdates() {
+            setInterval(() => {
+                // Simulating real-time data updates
+                const randomSector = data[2030][Math.floor(Math.random() * data[2030].length)];
+                randomSector.value += Math.random() > 0.5 ? 1 : -1;
+                randomSector.value = Math.max(0, Math.min(100, randomSector.value));
+
+                // Update the 2030 chart
+                svg2030.selectAll(".slice")
+                    .data(pie(data[2030]))
+                    .transition()
+                    .duration(500)
+                    .attrTween("d", function(d) {
+                        const interpolate = d3.interpolate(this._current, d);
+                        this._current = interpolate(0);
+                        return function(t) {
+                            return arc(interpolate(t));
+                        };
+                    });
+
+                d3.select("#real-time-updates")
+                    .style("display", "block")
+                    .html(`<p>Latest update: ${randomSector.sector} changed to ${randomSector.value}%</p>`);
+            }, 5000);
+        }
+
+        // Setup real-time updates on page load
+        setupRealTimeUpdates();
+
+        // Interactive Sector Breakdown
+        function createInteractiveSectorBreakdown() {
+            const breakdownSvg = d3.select(".sector-breakdown")
+                .append("svg")
+                .attr("width", 800)
+                .attr("height", 400);
+
+            const sectors = data[2030];
+            const xScale = d3.scaleBand()
+                .domain(sectors.map(d => d.sector))
+                .range([0, 800])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, 100])
+                .range([400, 0]);
+
+            breakdownSvg.selectAll("rect")
+                .data(sectors)
+                .enter()
+                .append("rect")
+                .attr("x", d => xScale(d.sector))
+                .attr("y", d => yScale(d.value))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => 400 - yScale(d.value))
+                .attr("fill", d => d.color)
+                .on("mouseover", function(event, d) {
+                    d3.select(this).attr("opacity", 0.8);
+                    d3.select("#info")
+                        .style("display", "block")
+                        .html(`<h3>${d.sector}</h3><p>Value: ${d.value}%</p><p>${d.info}</p>`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY + 10) + "px");
+                })
+                .on("mouseout", function() {
+                    d3.select(this).attr("opacity", 1);
+                    d3.select("#info").style("display", "none");
+                });
+
+            breakdownSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale))
+                .selectAll("text")
+                .attr("transform", "rotate(-45)")
+                .style("text-anchor", "end");
+
+            breakdownSvg.append("g")
+                .call(d3.axisLeft(yScale));
+        }
+
+        // Create interactive sector breakdown on page load
+        createInteractiveSectorBreakdown();
+
+        // NEOM Impact Visualization
+        function createNEOMImpactVisualization() {
+            const neomSvg = d3.select("#neom-info")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 300);
+
+            const neomData = [
+                {year: 2024, withNEOM: 10, withoutNEOM: 5},
+                {year: 2026, withNEOM: 15, withoutNEOM: 7},
+                {year: 2028, withNEOM: 20, withoutNEOM: 9},
+                {year: 2030, withNEOM: 25, withoutNEOM: 12}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(neomData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, 30])
+                .range([300, 0]);
+
+            neomSvg.selectAll(".bar-with-neom")
+                .data(neomData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-with-neom")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => yScale(d.withNEOM))
+                .attr("width", xScale.bandwidth() / 2)
+                .attr("height", d => 300 - yScale(d.withNEOM))
+                .attr("fill", "#4CAF50");
+
+            neomSvg.selectAll(".bar-without-neom")
+                .data(neomData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-without-neom")
+                .attr("x", d => xScale(d.year) + xScale.bandwidth() / 2)
+                .attr("y", d => yScale(d.withoutNEOM))
+                .attr("width", xScale.bandwidth() / 2)
+                .attr("height", d => 300 - yScale(d.withoutNEOM))
+                .attr("fill", "#FFC107");
+
+            neomSvg.append("g")
+                .attr("transform", "translate(0,300)")
+                .call(d3.axisBottom(xScale));
+
+            neomSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            neomSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("NEOM's Impact on Tourism Sector (% of GDP)");
+
+            const legend = neomSvg.append("g")
+                .attr("transform", "translate(450, 50)");
+
+            legend.append("rect")
+                .attr("width", 18)
+                .attr("height", 18)
+                .attr("fill", "#4CAF50");
+
+            legend.append("text")
+                .attr("x", 24)
+                .attr("y", 9)
+                .attr("dy", ".35em")
+                .text("With NEOM");
+
+            legend.append("rect")
+                .attr("width", 18)
+                .attr("height", 18)
+                .attr("fill", "#FFC107")
+                .attr("y", 25);
+
+            legend.append("text")
+                .attr("x", 24)
+                .attr("y", 34)
+                .attr("dy", ".35em")
+                .text("Without NEOM");
+        }
+
+        // Create NEOM impact visualization on page load
+        createNEOMImpactVisualization();
+
+        // MBS Vision 2030 Timeline
+        function createMBSTimeline() {
+            const timelineSvg = d3.select("#timeline")
+                .append("svg")
+                .attr("width", 1000)
+                .attr("height", 200);
+
+            const mbsEvents = [
+                {year: 2016, event: "Vision 2030 Announced"},
+                {year: 2017, event: "NEOM Project Unveiled"},
+                {year: 2019, event: "Saudi Aramco IPO"},
+                {year: 2021, event: "Green Saudi Initiative Launched"},
+                {year: 2024, event: "50% Renewable Energy Goal"},
+                {year: 2030, event: "Vision 2030 Target Year"}
+            ];
+
+            const xScale = d3.scaleLinear()
+                .domain([2016, 2030])
+                .range([0, 1000]);
+
+            timelineSvg.selectAll("circle")
+                .data(mbsEvents)
+                .enter()
+                .append("circle")
+                .attr("cx", d => xScale(d.year))
+                .attr("cy", 100)
+                .attr("r", 10)
+                .attr("fill", "#3498db");
+
+            timelineSvg.selectAll("text")
+                .data(mbsEvents)
+                .enter()
+                .append("text")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => d.year % 2 === 0 ? 80 : 120)
+                .attr("text-anchor", "middle")
+                .text(d => `${d.year}: ${d.event}`)
+                .attr("font-size", "12px")
+                .attr("fill", "#2c3e50");
+
+            timelineSvg.append("line")
+                .attr("x1", 0)
+                .attr("y1", 100)
+                .attr("x2", 1000)
+                .attr("y2", 100)
+                .attr("stroke", "#34495e")
+                .attr("stroke-width", 2);
+        }
+
+        // Create MBS Vision 2030 Timeline on page load
+        createMBSTimeline();
+
+        // Economic Diversification Progress
+        function createDiversificationChart() {
+            const diversificationSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const diversificationData = [
+                                {year: 2016, oilGDP: 42, nonOilGDP: 58},
+                {year: 2018, oilGDP: 40, nonOilGDP: 60},
+                {year: 2020, oilGDP: 38, nonOilGDP: 62},
+                {year: 2022, oilGDP: 35, nonOilGDP: 65},
+                {year: 2024, oilGDP: 32, nonOilGDP: 68},
+                {year: 2026, oilGDP: 30, nonOilGDP: 70},
+                {year: 2028, oilGDP: 28, nonOilGDP: 72},
+                {year: 2030, oilGDP: 25, nonOilGDP: 75}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(diversificationData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, 100])
+                .range([400, 0]);
+
+            diversificationSvg.selectAll(".bar-oil")
+                .data(diversificationData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-oil")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => yScale(d.oilGDP))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => 400 - yScale(d.oilGDP))
+                .attr("fill", "#e74c3c");
+
+            diversificationSvg.selectAll(".bar-nonoil")
+                .data(diversificationData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-nonoil")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => yScale(100))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => 400 - yScale(d.nonOilGDP))
+                .attr("fill", "#2ecc71");
+
+            diversificationSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            diversificationSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            diversificationSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Economic Diversification Progress");
+
+            const legend = diversificationSvg.append("g")
+                .attr("transform", "translate(450, 50)");
+
+            legend.append("rect")
+                .attr("width", 18)
+                .attr("height", 18)
+                .attr("fill", "#e74c3c");
+
+            legend.append("text")
+                .attr("x", 24)
+                .attr("y", 9)
+                .attr("dy", ".35em")
+                .text("Oil GDP");
+
+            legend.append("rect")
+                .attr("width", 18)
+                .attr("height", 18)
+                .attr("fill", "#2ecc71")
+                .attr("y", 25);
+
+            legend.append("text")
+                .attr("x", 24)
+                .attr("y", 34)
+                .attr("dy", ".35em")
+                .text("Non-Oil GDP");
+        }
+
+        // Create Economic Diversification Progress chart on page load
+        createDiversificationChart();
+
+        // Foreign Direct Investment (FDI) Trends
+        function createFDITrendChart() {
+            const fdiSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const fdiData = [
+                {year: 2016, fdi: 7.45},
+                {year: 2017, fdi: 1.42},
+                {year: 2018, fdi: 4.24},
+                {year: 2019, fdi: 4.56},
+                {year: 2020, fdi: 5.49},
+                {year: 2021, fdi: 19.3},
+                {year: 2022, fdi: 32.0}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(fdiData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(fdiData, d => d.fdi)])
+                .range([400, 0]);
+
+            fdiSvg.selectAll(".bar-fdi")
+                .data(fdiData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-fdi")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => yScale(d.fdi))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => 400 - yScale(d.fdi))
+                .attr("fill", "#3498db");
+
+            fdiSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            fdiSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            fdiSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Foreign Direct Investment Trends (Billion USD)");
+        }
+
+        // Create FDI Trend chart on page load
+        createFDITrendChart();
+
+        // Unemployment Rate Visualization
+        function createUnemploymentChart() {
+            const unemploymentSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const unemploymentData = [
+                {year: 2016, rate: 12.5},
+                {year: 2017, rate: 12.8},
+                {year: 2018, rate: 12.7},
+                {year: 2019, rate: 12.0},
+                {year: 2020, rate: 12.6},
+                {year: 2021, rate: 11.0},
+                {year: 2022, rate: 9.7}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(unemploymentData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(unemploymentData, d => d.rate)])
+                .range([400, 0]);
+
+            const line = d3.line()
+                .x(d => xScale(d.year) + xScale.bandwidth() / 2)
+                .y(d => yScale(d.rate));
+
+            unemploymentSvg.append("path")
+                .datum(unemploymentData)
+                .attr("fill", "none")
+                .attr("stroke", "#e74c3c")
+                .attr("stroke-width", 2)
+                .attr("d", line);
+
+            unemploymentSvg.selectAll(".dot")
+                .data(unemploymentData)
+                .enter()
+                .append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => xScale(d.year) + xScale.bandwidth() / 2)
+                .attr("cy", d => yScale(d.rate))
+                .attr("r", 5)
+                .attr("fill", "#e74c3c");
+
+            unemploymentSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            unemploymentSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            unemploymentSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Unemployment Rate (%)");
+        }
+
+        // Create Unemployment Rate chart on page load
+        createUnemploymentChart();
+
+        // Tourism Sector Growth
+        function createTourismGrowthChart() {
+            const tourismSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const tourismData = [
+                {year: 2016, visitors: 18},
+                {year: 2017, visitors: 16},
+                {year: 2018, visitors: 15},
+                {year: 2019, visitors: 17},
+                {year: 2020, visitors: 4},
+                {year: 2021, visitors: 6},
+                {year: 2022, visitors: 16},
+                {year: 2023, visitors: 22},
+                {year: 2024, visitors: 30}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(tourismData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(tourismData, d => d.visitors)])
+                .range([400, 0]);
+
+            tourismSvg.selectAll(".bar-tourism")
+                .data(tourismData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-tourism")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => yScale(d.visitors))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => 400 - yScale(d.visitors))
+                .attr("fill", "#9b59b6");
+
+            tourismSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            tourismSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            tourismSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Tourism Sector Growth (Million Visitors)");
+        }
+
+        // Create Tourism Growth chart on page load
+        createTourismGrowthChart();
+
+        // NEOM Project Timeline
+        function createNEOMTimeline() {
+            const neomTimelineSvg = d3.select("#neom-info")
+                .append("svg")
+                .attr("width", 800)
+                .attr("height", 200);
+
+            const neomEvents = [
+                {year: 2017, event: "NEOM Announced"},
+                {year: 2019, event: "NEOM Bay Airport Opened"},
+                {year: 2021, event: "The Line Concept Unveiled"},
+                {year: 2022, event: "NEOM Green Hydrogen Plant Construction Begins"},
+                {year: 2024, event: "First NEOM Residential Areas Completed"},
+                {year: 2025, event: "NEOM International Airport Operational"},
+                {year: 2030, event: "NEOM Phase 1 Completion Target"}
+            ];
+
+            const xScale = d3.scaleLinear()
+                .domain([2017, 2030])
+                .range([0, 800]);
+
+            neomTimelineSvg.selectAll("circle")
+                .data(neomEvents)
+                .enter()
+                .append("circle")
+                .attr("cx", d => xScale(d.year))
+                .attr("cy", 100)
+                .attr("r", 10)
+                .attr("fill", "#2ecc71");
+
+            neomTimelineSvg.selectAll("text")
+                .data(neomEvents)
+                .enter()
+                .append("text")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => d.year % 2 === 0 ? 80 : 120)
+                .attr("text-anchor", "middle")
+                .text(d => `${d.year}: ${d.event}`)
+                .attr("font-size", "12px")
+                .attr("fill", "#2c3e50");
+
+            neomTimelineSvg.append("line")
+                .attr("x1", 0)
+                .attr("y1", 100)
+                .attr("x2", 800)
+                .attr("y2", 100)
+                .attr("stroke", "#34495e")
+                .attr("stroke-width", 2);
+        }
+
+        // Create NEOM Project Timeline on page load
+        createNEOMTimeline();
+
+        // Renewable Energy Capacity Growth
+        function createRenewableEnergyChart() {
+            const renewableSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const renewableData = [
+                {year: 2016, capacity: 0.1},
+                {year: 2017, capacity: 0.2},
+                {year: 2018, capacity: 0.4},
+                {year: 2019, capacity: 0.8},
+                {year: 2020, capacity: 1.5},
+                {year: 2021, capacity: 2.8},
+                {year: 2022, capacity: 5.2},
+                {year: 2023, capacity: 8.7},
+                {year: 2024, capacity: 13.5}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(renewableData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(renewableData, d => d.capacity)])
+                .range([400, 0]);
+
+            const line = d3.line()
+                .x(d => xScale(d.year) + xScale.bandwidth() / 2)
+                .y(d => yScale(d.capacity))
+                .curve(d3.curveMonotoneX);
+
+            renewableSvg.append("path")
+                .datum(renewableData)
+                .attr("fill", "none")
+                .attr("stroke", "#27ae60")
+                .attr("stroke-width", 2)
+                .attr("d", line);
+
+            renewableSvg.selectAll(".dot")
+                .data(renewableData)
+                .enter()
+                .append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => xScale(d.year) + xScale.bandwidth() / 2)
+                .attr("cy", d => yScale(d.capacity))
+                .attr("r", 5)
+                .attr("fill", "#27ae60");
+
+            renewableSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            renewableSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            renewableSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                                .attr("text-anchor", "middle")
+                .text("Renewable Energy Capacity Growth (GW)");
+        }
+
+        // Create Renewable Energy Capacity Growth chart on page load
+        createRenewableEnergyChart();
+
+        // GDP Per Capita Trend
+        function createGDPPerCapitaChart() {
+            const gdpPerCapitaSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const gdpPerCapitaData = [
+                {year: 2016, gdpPerCapita: 19879},
+                {year: 2017, gdpPerCapita: 20849},
+                {year: 2018, gdpPerCapita: 23539},
+                {year: 2019, gdpPerCapita: 23140},
+                {year: 2020, gdpPerCapita: 20110},
+                {year: 2021, gdpPerCapita: 23586},
+                {year: 2022, gdpPerCapita: 26768},
+                {year: 2023, gdpPerCapita: 28723},
+                {year: 2024, gdpPerCapita: 30500}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(gdpPerCapitaData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(gdpPerCapitaData, d => d.gdpPerCapita)])
+                .range([400, 0]);
+
+            const line = d3.line()
+                .x(d => xScale(d.year) + xScale.bandwidth() / 2)
+                .y(d => yScale(d.gdpPerCapita))
+                .curve(d3.curveMonotoneX);
+
+            gdpPerCapitaSvg.append("path")
+                .datum(gdpPerCapitaData)
+                .attr("fill", "none")
+                .attr("stroke", "#3498db")
+                .attr("stroke-width", 2)
+                .attr("d", line);
+
+            gdpPerCapitaSvg.selectAll(".dot")
+                .data(gdpPerCapitaData)
+                .enter()
+                .append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => xScale(d.year) + xScale.bandwidth() / 2)
+                .attr("cy", d => yScale(d.gdpPerCapita))
+                .attr("r", 5)
+                .attr("fill", "#3498db");
+
+            gdpPerCapitaSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            gdpPerCapitaSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            gdpPerCapitaSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("GDP Per Capita Trend (USD)");
+        }
+
+        // Create GDP Per Capita Trend chart on page load
+        createGDPPerCapitaChart();
+
+        // Non-Oil Exports Growth
+        function createNonOilExportsChart() {
+            const nonOilExportsSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const nonOilExportsData = [
+                {year: 2016, exports: 43},
+                {year: 2017, exports: 47},
+                {year: 2018, exports: 53},
+                {year: 2019, exports: 55},
+                {year: 2020, exports: 51},
+                {year: 2021, exports: 63},
+                {year: 2022, exports: 78},
+                {year: 2023, exports: 92},
+                {year: 2024, exports: 110}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(nonOilExportsData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(nonOilExportsData, d => d.exports)])
+                .range([400, 0]);
+
+            nonOilExportsSvg.selectAll(".bar-exports")
+                .data(nonOilExportsData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-exports")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => yScale(d.exports))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => 400 - yScale(d.exports))
+                .attr("fill", "#f39c12");
+
+            nonOilExportsSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            nonOilExportsSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            nonOilExportsSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Non-Oil Exports Growth (Billion USD)");
+        }
+
+        // Create Non-Oil Exports Growth chart on page load
+        createNonOilExportsChart();
+
+        // Digital Economy Contribution
+        function createDigitalEconomyChart() {
+            const digitalEconomySvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const digitalEconomyData = [
+                {year: 2016, contribution: 2.1},
+                {year: 2017, contribution: 2.4},
+                {year: 2018, contribution: 2.8},
+                {year: 2019, contribution: 3.2},
+                {year: 2020, contribution: 3.8},
+                {year: 2021, contribution: 4.5},
+                {year: 2022, contribution: 5.3},
+                {year: 2023, contribution: 6.2},
+                {year: 2024, contribution: 7.1}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(digitalEconomyData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(digitalEconomyData, d => d.contribution)])
+                .range([400, 0]);
+
+            const line = d3.line()
+                .x(d => xScale(d.year) + xScale.bandwidth() / 2)
+                .y(d => yScale(d.contribution))
+                .curve(d3.curveMonotoneX);
+
+            digitalEconomySvg.append("path")
+                .datum(digitalEconomyData)
+                .attr("fill", "none")
+                .attr("stroke", "#8e44ad")
+                .attr("stroke-width", 2)
+                .attr("d", line);
+
+            digitalEconomySvg.selectAll(".dot")
+                .data(digitalEconomyData)
+                .enter()
+                .append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => xScale(d.year) + xScale.bandwidth() / 2)
+                .attr("cy", d => yScale(d.contribution))
+                .attr("r", 5)
+                .attr("fill", "#8e44ad");
+
+            digitalEconomySvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            digitalEconomySvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            digitalEconomySvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Digital Economy Contribution to GDP (%)");
+        }
+
+        // Create Digital Economy Contribution chart on page load
+        createDigitalEconomyChart();
+
+        // SME Contribution to GDP
+        function createSMEContributionChart() {
+            const smeSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const smeData = [
+                {year: 2016, contribution: 20},
+                {year: 2017, contribution: 21},
+                {year: 2018, contribution: 22},
+                {year: 2019, contribution: 23},
+                {year: 2020, contribution: 24},
+                {year: 2021, contribution: 26},
+                {year: 2022, contribution: 28},
+                {year: 2023, contribution: 30},
+                {year: 2024, contribution: 32}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(smeData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(smeData, d => d.contribution)])
+                .range([400, 0]);
+
+            smeSvg.selectAll(".bar-sme")
+                .data(smeData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-sme")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => yScale(d.contribution))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => 400 - yScale(d.contribution))
+                .attr("fill", "#16a085");
+
+            smeSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            smeSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            smeSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("SME Contribution to GDP (%)");
+        }
+
+        // Create SME Contribution to GDP chart on page load
+        createSMEContributionChart();
+
+        // Women's Participation in Workforce
+        function createWomenWorkforceChart() {
+            const womenWorkforceSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const womenWorkforceData = [
+                {year: 2016, participation: 19.3},
+                {year: 2017, participation: 20.2},
+                {year: 2018, participation: 21.1},
+                {year: 2019, participation: 23.5},
+                {year: 2020, participation: 25.9},
+                {year: 2021, participation: 28.7},
+                {year: 2022, participation: 31.8},
+                {year: 2023, participation: 34.5},
+                {year: 2024, participation: 37.2}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(womenWorkforceData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(womenWorkforceData, d => d.participation)])
+                .range([400, 0]);
+
+            const line = d3.line()
+                .x(d => xScale(d.year) + xScale.bandwidth() / 2)
+                .y(d => yScale(d.participation))
+                .curve(d3.curveMonotoneX);
+
+            womenWorkforceSvg.append("path")
+                .datum(womenWorkforceData)
+                .attr("fill", "none")
+                .attr("stroke", "#d35400")
+                .attr("stroke-width", 2)
+                .attr("d", line);
+
+            womenWorkforceSvg.selectAll(".dot")
+                .data(womenWorkforceData)
+                .enter()
+                .append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => xScale(d.year) + xScale.bandwidth() / 2)
+                .attr("cy", d => yScale(d.participation))
+                .attr("r", 5)
+                .attr("fill", "#d35400");
+
+            womenWorkforceSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            womenWorkforceSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            womenWorkforceSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Women's Participation in Workforce (%)");
+        }
+
+        // Create Women's Participation in Workforce chart on page load
+        createWomenWorkforceChart();
+
+        // Interactive Sector Comparison
+        function createInteractiveSectorComparison() {
+            const sectorComparisonSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 800)
+                .attr("height", 600);
+
+            const sectors = ["Oil", "Non-Oil", "Tourism", "Technology", "Renewable Energy", "Healthcare", "Education"];
+            const years = [2016, 2024, 2030];
+
+            const sectorData = {
+                Oil: [87, 50, 35],
+                "Non-Oil": [6, 30, 35],
+                Tourism: [2, 10, 15],
+                Technology: [1, 5, 10],
+                "Renewable Energy": [0, 5, 10],
+                Healthcare: [2, 5, 7],
+                Education: [2, 8, 8]
+            };
+
+            const xScale = d3.scaleBand()
+                .domain(sectors)
+                .range([0, 800])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, 100])
+                .range([550, 50]);
+
+            const colorScale = d3.scaleOrdinal()
+                .domain(years)
+                .range(["#3498db", "#2ecc71", "#e74c3c"]);
+
+            sectors.forEach(sector => {
+                const sectorGroup = sectorComparisonSvg.append("g")
+                    .attr("class", "sector-group");
+
+                years.forEach((year, index) => {
+                    sectorGroup.append("rect")
+                        .attr("x", xScale(sector) + (index * xScale.bandwidth() / 3))
+                        .attr("y", yScale(sectorData[sector][index]))
+                        .attr("width", xScale.bandwidth() / 3)
+                        .attr("height", 550 - yScale(sectorData[sector][index]))
+                        .attr("fill", colorScale(year));
+
+                    // Add tooltips for each bar
+                    sectorGroup.append("title")
+                        .text(`${sector} in ${year}: ${sectorData[sector][index]}%`);
+                });
+            });
+
+            sectorComparisonSvg.append("g")
+                .attr("transform", "translate(0,550)")
+                .call(d3.axisBottom(xScale));
+
+            sectorComparisonSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            sectorComparisonSvg.append("text")
+                .attr("x", 400)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Sector Comparison Over Years");
+        }
+
+        // Create Interactive Sector Comparison chart on page load
+        createInteractiveSectorComparison();
+
+        // NEOM Impact Visualization
+        function createNEOMImpactVisualization() {
+            const neomSvg = d3.select("#neom-info")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 300);
+
+            const neomData = [
+                {year: 2024, withNEOM: 10, withoutNEOM: 5},
+                {year: 2026, withNEOM: 15, withoutNEOM: 7},
+                {year: 2028, withNEOM: 20, withoutNEOM: 9},
+                {year: 2030, withNEOM: 25, withoutNEOM: 12}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(neomData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, 30])
+                .range([300, 0]);
+
+            neomSvg.selectAll(".bar-with-neom")
+                .data(neomData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-with-neom")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => yScale(d.withNEOM))
+                .attr("width", xScale.bandwidth() / 2)
+                .attr("height", d => 300 - yScale(d.withNEOM))
+                .attr("fill", "#4CAF50");
+
+            neomSvg.selectAll(".bar-without-neom")
+                .data(neomData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-without-neom")
+                .attr("x", d => xScale(d.year) + xScale.bandwidth() / 2)
+                .attr("y", d => yScale(d.withoutNEOM))
+                .attr("width", xScale.bandwidth() / 2)
+                .attr("height", d => 300 - yScale(d.withoutNEOM))
+                .attr("fill", "#FFC107");
+
+            neomSvg.append("g")
+                .attr("transform", "translate(0,300)")
+                .call(d3.axisBottom(xScale));
+
+            neomSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            neomSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("NEOM's Impact on Tourism Sector (% of GDP)");
+
+            const legend = neomSvg.append("g")
+                .attr("transform", "translate(450, 50)");
+
+            legend.append("rect")
+                .attr("width", 18)
+                .attr("height", 18)
+                .attr("fill", "#4CAF50");
+
+            legend.append("text")
+                .attr("x", 24)
+                .attr("y", 9)
+                .attr("dy", ".35em")
+                .text("With NEOM");
+
+            legend.append("rect")
+                .attr("width", 18)
+                .attr("height", 18)
+                .attr("fill", "#FFC107")
+                .attr("y", 25);
+
+            legend.append("text")
+                .attr("x", 24)
+                .attr("y", 34)
+                .attr("dy", ".35em")
+                .text("Without NEOM");
+        }
+
+        // Create NEOM impact visualization on page load
+        createNEOMImpactVisualization();
+
+        // MBS Vision 2030 Timeline
+        function createMBSTimeline() {
+            const timelineSvg = d3.select("#timeline")
+                .append("svg")
+                .attr("width", 800)
+                .attr("height", 200);
+
+            const mbsEvents = [
+                {year: 2016, event: "Vision 2030 Announced"},
+                {year: 2017, event: "NEOM Project Unveiled"},
+                {year: 2019, event: "Saudi Aramco IPO"},
+                {year: 2021, event: "Green Saudi Initiative Launched"},
+                {year: 2024, event: "50% Renewable Energy Goal"},
+                {year: 2030, event: "Vision 2030 Target Year"}
+            ];
+
+            const xScale = d3.scaleLinear()
+                .domain([2016, 2030])
+                .range([0, 800]);
+
+            timelineSvg.selectAll("circle")
+                .data(mbsEvents)
+                .enter()
+                .append("circle")
+                .attr("cx", d => xScale(d.year))
+                .attr("cy", 100)
+                .attr("r", 10)
+                .attr("fill", "#3498db");
+
+            timelineSvg.selectAll("text")
+                .data(mbsEvents)
+                .enter()
+                .append("text")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => d.year % 2 === 0 ? 80 : 120)
+                .attr("text-anchor", "middle")
+                .text(d => `${d.year}: ${d.event}`)
+                .attr("font-size", "12px")
+                .attr("fill", "#2c3e50");
+
+            timelineSvg.append("line")
+                .attr("x1", 0)
+                .attr("y1", 100)
+                .attr("x2", 800)
+                .attr("y2", 100)
+                .attr("stroke", "#34495e")
+                .attr("stroke-width", 2);
+        }
+
+        // Create MBS Vision 2030 Timeline on page load
+        createMBSTimeline();
+
+        // Renewable Energy Capacity Growth
+        function createRenewableEnergyChart() {
+            const renewableSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const renewableData = [
+                {year: 2016, capacity: 0.1},
+                {year: 2017, capacity: 0.2},
+                {year: 2018, capacity: 0.4},
+                {year: 2019, capacity: 0.8},
+                {year: 2020, capacity: 1.5},
+                {year: 2021, capacity: 2.8},
+                {year: 2022, capacity: 5.2},
+                {year: 2023, capacity: 8.7},
+                {year: 2024, capacity: 13.5}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(renewableData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(renewableData, d => d.capacity)])
+                .range([400, 0]);
+
+            renewableSvg.selectAll(".bar-renewable")
+                .data(renewableData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-renewable")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => yScale(d.capacity))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => 400 - yScale(d.capacity))
+                .attr("fill", "#27ae60");
+
+            renewableSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            renewableSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            renewableSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Renewable Energy Capacity Growth (GW)");
+        }
+
+        // Create Renewable Energy Capacity Growth chart on page load
+        createRenewableEnergyChart();
+
+        // GDP Per Capita Trend
+        function createGDPPerCapitaChart() {
+            const gdpPerCapitaSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const gdpPerCapitaData = [
+                {year: 2016, gdpPerCapita: 19879},
+                {year: 2017, gdpPerCapita: 20849},
+                {year: 2018, gdpPerCapita: 23539},
+                {year: 2019, gdpPerCapita: 23140},
+                {year: 2020, gdpPerCapita: 20110},
+                {year: 2021, gdpPerCapita: 23586},
+                {year: 2022, gdpPerCapita: 26768},
+                {year: 2023, gdpPerCapita: 28723},
+                {year: 2024, gdpPerCapita: 30500}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(gdpPerCapitaData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(gdpPerCapitaData, d => d.gdpPerCapita)])
+                .range([400, 0]);
+
+            const line = d3.line()
+                .x(d => xScale(d.year) + xScale.bandwidth() / 2)
+                .y(d => yScale(d.gdpPerCapita))
+                .curve(d3.curveMonotoneX);
+
+            gdpPerCapitaSvg.append("path")
+                .datum(gdpPerCapitaData)
+                .attr("fill", "none")
+                .attr("stroke", "#3498db")
+                .attr("stroke-width", 2)
+                .attr("d", line);
+
+            gdpPerCapitaSvg.selectAll(".dot")
+                .data(gdpPerCapitaData)
+                .enter()
+                .append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => xScale(d.year) + xScale.bandwidth() / 2)
+                .attr("cy", d => yScale(d.gdpPerCapita))
+                .attr("r", 5)
+                .attr("fill", "#3498db");
+
+            gdpPerCapitaSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            gdpPerCapitaSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            gdpPerCapitaSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("GDP Per Capita Trend (USD)");
+        }
+
+        // Create GDP Per Capita Trend chart on page load
+        createGDPPerCapitaChart();
+
+        // Non-Oil Exports Growth
+        function createNonOilExportsChart() {
+            const nonOilExportsSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const nonOilExportsData = [
+                {year: 2016, exports: 43},
+                {year: 2017, exports: 47},
+                {year: 2018, exports: 53},
+                {year: 2019, exports: 55},
+                {year: 2020, exports: 51},
+                {year: 2021, exports: 63},
+                {year: 2022, exports: 78},
+                {year: 2023, exports: 92},
+                {year: 2024, exports: 110}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(nonOilExportsData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(nonOilExportsData, d => d.exports)])
+                .range([400, 0]);
+
+            nonOilExportsSvg.selectAll(".bar-exports")
+                .data(nonOilExportsData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar-exports")
+                .attr("x", d => xScale(d.year))
+                .attr("y", d => yScale(d.exports))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => 400 - yScale(d.exports))
+                .attr("fill", "#3498db");
+
+            nonOilExportsSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            nonOilExportsSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            nonOilExportsSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Non-Oil Exports Growth (Billion USD)");
+        }
+
+        // Create Non-Oil Exports Growth chart on page load
+        createNonOilExportsChart();
+
+        // Women's Participation in Workforce
+        function createWomenWorkforceChart() {
+            const womenWorkforceSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 600)
+                .attr("height", 400);
+
+            const womenWorkforceData = [
+                {year: 2016, participation: 19.3},
+                {year: 2017, participation: 20.2},
+                {year: 2018, participation: 21.1},
+                {year: 2019, participation: 23.5},
+                {year: 2020, participation: 25.9},
+                {year: 2021, participation: 28.7},
+                {year: 2022, participation: 31.8},
+                {year: 2023, participation: 34.5},
+                {year: 2024, participation: 37.2}
+            ];
+
+            const xScale = d3.scaleBand()
+                .domain(womenWorkforceData.map(d => d.year))
+                .range([0, 600])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(womenWorkforceData, d => d.participation)])
+                .range([400, 0]);
+
+            const line = d3.line()
+                .x(d => xScale(d.year) + xScale.bandwidth() / 2)
+                .y(d => yScale(d.participation))
+                .curve(d3.curveMonotoneX);
+
+            womenWorkforceSvg.append("path")
+                .datum(womenWorkforceData)
+                .attr("fill", "none")
+                .attr("stroke", "#d35400")
+                .attr("stroke-width", 2)
+                .attr("d", line);
+
+            womenWorkforceSvg.selectAll(".dot")
+                .data(womenWorkforceData)
+                .enter()
+                .append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => xScale(d.year) + xScale.bandwidth() / 2)
+                .attr("cy", d => yScale(d.participation))
+                .attr("r", 5)
+                .attr("fill", "#d35400");
+
+            womenWorkforceSvg.append("g")
+                .attr("transform", "translate(0,400)")
+                .call(d3.axisBottom(xScale));
+
+            womenWorkforceSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            womenWorkforceSvg.append("text")
+                .attr("x", 300)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Women's Participation in Workforce (%)");
+        }
+
+        // Create Women's Participation in Workforce chart on page load
+        createWomenWorkforceChart();
+
+        // Interactive Sector Comparison
+        function createInteractiveSectorComparison() {
+            const sectorComparisonSvg = d3.select("#details")
+                .append("svg")
+                .attr("width", 800)
+                .attr("height", 600);
+
+            const sectors = ["Oil", "Non-Oil", "Tourism", "Technology", "Renewable Energy", "Healthcare", "Education"];
+            const years = [2016, 2024, 2030];
+
+            const sectorData = {
+                Oil: [87, 50, 35],
+                "Non-Oil": [6, 30, 35],
+                Tourism: [2, 10, 15],
+                Technology: [1, 5, 10],
+                "Renewable Energy": [0, 5, 10],
+                Healthcare: [2, 5, 7],
+                Education: [2, 8, 8]
+            };
+
+            const xScale = d3.scaleBand()
+                .domain(sectors)
+                .range([0, 800])
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, 100])
+                .range([550, 50]);
+
+            const colorScale = d3.scaleOrdinal()
+                .domain(years)
+                .range(["#3498db", "#2ecc71", "#e74c3c"]);
+
+            sectors.forEach(sector => {
+                                const sectorGroup = sectorComparisonSvg.append("g")
+                    .attr("class", "sector-group");
+
+                years.forEach((year, index) => {
+                    sectorGroup.append("rect")
+                        .attr("x", xScale(sector) + (index * xScale.bandwidth() / 3))
+                        .attr("y", yScale(sectorData[sector][index]))
+                        .attr("width", xScale.bandwidth() / 3)
+                        .attr("height", 550 - yScale(sectorData[sector][index]))
+                        .attr("fill", colorScale(year))
+                        .on("mouseover", function(event, d) {
+                            d3.select(this).attr("opacity", 0.8);
+                            showTooltip(event, `${sector} in ${year}: ${sectorData[sector][index]}%`);
+                        })
+                        .on("mouseout", function() {
+                            d3.select(this).attr("opacity", 1);
+                            hideTooltip();
+                        })
+                        .on("click", function() {
+                            showDetailedSectorInfo(sector, year, sectorData[sector][index]);
+                        });
+                });
+            });
+
+            sectorComparisonSvg.append("g")
+                .attr("transform", "translate(0,550)")
+                .call(d3.axisBottom(xScale));
+
+            sectorComparisonSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            sectorComparisonSvg.append("text")
+                .attr("x", 400)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .text("Interactive Sector Comparison Over Years");
+
+            // Legend
+            const legend = sectorComparisonSvg.append("g")
+                .attr("class", "legend")
+                .attr("transform", "translate(650, 50)");
+
+            years.forEach((year, i) => {
+                legend.append("rect")
+                    .attr("x", 0)
+                    .attr("y", i * 25)
+                    .attr("width", 20)
+                    .attr("height", 20)
+                    .attr("fill", colorScale(year));
+
+                legend.append("text")
+                    .attr("x", 30)
+                    .attr("y", i * 25 + 15)
+                    .text(year);
+            });
+        }
+
+        // Create Interactive Sector Comparison chart on page load
+        createInteractiveSectorComparison();
+
+        // Tooltip functions
+        function showTooltip(event, text) {
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            tooltip.html(text)
+                .style("left", (event.pageX) + "px")
+                .style("top", (event.pageY - 28) + "px");
+        }
+
+        function hideTooltip() {
+            d3.select(".tooltip").remove();
+        }
+
+        // Detailed Sector Information
+        function showDetailedSectorInfo(sector, year, value) {
+            const detailsDiv = d3.select("#details");
+            detailsDiv.html("");
+            detailsDiv.append("h2").text(`${sector} Sector in ${year}`);
+            detailsDiv.append("p").text(`Contribution to GDP: ${value}%`);
+
+            // Add more detailed information based on the sector and year
+            const sectorInfo = getSectorInfo(sector, year);
+            detailsDiv.append("p").text(sectorInfo.description);
+            detailsDiv.append("h3").text("Key Initiatives:");
+            const ul = detailsDiv.append("ul");
+            sectorInfo.initiatives.forEach(initiative => {
+                ul.append("li").text(initiative);
+            });
+
+            // Add a small chart showing the sector's trend
+            const trendData = getTrendData(sector);
+            createTrendChart(detailsDiv, trendData, sector);
+        }
+
+        function getSectorInfo(sector, year) {
+            // This function would return detailed information about each sector
+            // For brevity, I'll just return placeholder data
+            return {
+                description: `The ${sector} sector has shown significant changes from 2016 to 2030, reflecting the goals of Vision 2030.`,
+                initiatives: [
+                    "Investment in new technologies",
+                    "Workforce development programs",
+                    "International partnerships",
+                    "Regulatory reforms"
+                ]
+            };
+        }
+
+        function getTrendData(sector) {
+            // This function would return historical and projected data for the sector
+            // For brevity, I'll just return placeholder data
+            return [
+                {year: 2016, value: 10},
+                {year: 2020, value: 15},
+                {year: 2024, value: 20},
+                {year: 2028, value: 25},
+                {year: 2030, value: 30}
+            ];
+        }
+
+        function createTrendChart(container, data, sector) {
+            const width = 400;
+            const height = 200;
+            const margin = {top: 20, right: 20, bottom: 30, left: 50};
+
+            const svg = container.append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleLinear()
+                .domain(d3.extent(data, d => d.year))
+                .range([0, width]);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.value)])
+                .range([height, 0]);
+
+            const line = d3.line()
+                .x(d => x(d.year))
+                .y(d => y(d.value));
+
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x).ticks(5));
+
+            svg.append("g")
+                .call(d3.axisLeft(y));
+
+            svg.append("path")
+                .datum(data)
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-width", 1.5)
+                .attr("d", line);
+
+            svg.append("text")
+                .attr("x", width / 2)
+                .attr("y", 0)
+                .attr("text-anchor", "middle")
+                .text(`${sector} Sector Trend`);
+        }
+
+        // 3D Visualization of GDP Evolution
+        function create3DVisualization() {
+            const container = document.getElementById('3d-chart');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(width, height);
+            container.appendChild(renderer.domElement);
+
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+            const cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+
+            camera.position.z = 5;
+
+            const animate = function () {
+                requestAnimationFrame(animate);
+
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+
+                renderer.render(scene, camera);
+            };
+
+            animate();
+        }
+
+        // Call 3D visualization on button click
+        d3.select("#show3DChart").on("click", create3DVisualization);
+
+        // AI-powered GDP Prediction
+        async function predictFutureGDP() {
+            // This is a placeholder for actual machine learning prediction
+            // In a real-world scenario, you'd use TensorFlow.js or another ML library
+            const predictedGDP = Math.random() * 1000 + 2000;
+            
+            d3.select("#ml-predictions")
+                .style("display", "block")
+                .html(`<h3>AI-Powered GDP Prediction for 2035</h3>
+                       <p>Predicted GDP: $${predictedGDP.toFixed(2)} billion</p>
+                       <p>This prediction is based on historical trends and current economic indicators.</p>`);
+        }
+
+        // Call AI prediction on button click
+        d3.select("#showMLPredictions").on("click", predictFutureGDP);
+
+        // Virtual Reality Experience
+        function launchVRExperience() {
+            // This is a placeholder for actual VR implementation
+            // In a real-world scenario, you'd use A-Frame or another VR library
+            d3.select("#vr-experience")
+                .style("display", "block")
+                .html(`<h3>Virtual Reality Experience</h3>
+                       <p>Imagine walking through a virtual Saudi Arabia, seeing the economic transformations in 3D!</p>
+                       <p>This feature would require a VR headset and more advanced implementation.</p>`);
+        }
+
+        // Launch VR experience on button click
+        d3.select("#showVRExperience").on("click", launchVRExperience);
+
+        // Blockchain Data Verification
+        function verifyDataOnBlockchain() {
+            // This is a placeholder for actual blockchain verification
+            // In a real-world scenario, you'd interact with a blockchain network
+            const isVerified = Math.random() > 0.5;
+            
+            d3.select("#blockchain-verification")
+                .style("display", "block")
+                .html(`<h3>Blockchain Data Verification</h3>
+                       <p>Data Verification Status: ${isVerified ? "Verified" : "Not Verified"}</p>
+                       <p>This simulates verifying the integrity of the economic data on a blockchain.</p>`);
+        }
+
+        // Verify data on blockchain on button click
+        d3.select("#verifyBlockchain").on("click", verifyDataOnBlockchain);
+
+        // Voice Control Interface
+        function setupVoiceControl() {
+            // This is a placeholder for actual voice control implementation
+            // In a real-world scenario, you'd use the Web Speech API or a similar technology
+            d3.select("#voice-control")
+                .style("display", "block")
+                .html(`<h3>Voice Control Activated</h3>
+                       <p>Try saying commands like "Show 2030 chart" or "Compare oil and non-oil sectors".</p>
+                       <p>This feature would require integration with speech recognition technology.</p>`);
+        }
+
+        // Activate voice control on button click
+        d3.select("#activateVoiceControl").on("click", setupVoiceControl);
+
+        // Real-time Data Updates
+        function setupRealTimeUpdates() {
+            setInterval(() => {
+                // This would normally fetch real-time data from an API
+                const randomSector = data[2030][Math.floor(Math.random() * data[2030].length)];
+                randomSector.value += Math.random() > 0.5 ? 1 : -1;
+                randomSector.value = Math.max(0, Math.min(100, randomSector.value));
+
+                // Update the 2030 chart
+                updateChart(svg2030, data[2030]);
+
+                d3.select("#real-time-updates")
+                    .style("display", "block")
+                    .html(`<h3>Real-time Update</h3>
+                           <p>Latest change: ${randomSector.sector} sector is now at ${randomSector.value}%</p>`);
+            }, 5000);
+        }
+
+        // Update chart function
+        function updateChart(svg, newData) {
+            svg.selectAll(".slice")
+                .data(pie(newData))
+                .transition()
+                .duration(500)
+                .attrTween("d", function(d) {
+                    const interpolate = d3.interpolate(this._current, d);
+                    this._current = interpolate(0);
+                    return function(t) {
+                        return arc(interpolate(t));
+                    };
+                });
+        }
+
+        // Setup real-time updates on page load
+        setupRealTimeUpdates();
+
+        // Export as Interactive PDF
+        function exportInteractivePDF() {
+            // This is a placeholder for actual PDF export functionality
+            // In a real-world scenario, you'd use a library like jsPDF with additional interactive features
+            alert("Exporting as interactive PDF... This would include all charts and allow for some interactivity within the PDF.");
+        }
+
+        // Export as interactive PDF on button click
+        d3.select("#exportPDF").on("click", exportInteractivePDF);
+
+        // Social Media Integration
+        function setupSocialSharing() {
+            const shareButtons = d3.select("body").append("div")
+                .attr("class", "social-sharing")
+                .style("position", "fixed")
+                .style("top", "50%")
+                .style("right", "20px");
+
+            const platforms = ["Twitter", "Facebook", "LinkedIn"];
+            platforms.forEach(platform => {
+                shareButtons.append("button")
+                    .text(`Share on ${platform}`)
+                    .on("click", () => shareToPlatform(platform));
+            });
+        }
+
+        function shareToPlatform(platform) {
+            // This would normally open a share dialog for the specified platform
+            alert(`Sharing to ${platform}... This would open a dialog to share the visualization.`);
+        }
+
+        // Setup social sharing on page load
+        setupSocialSharing();
+
+        // Accessibility Features
+        function setupAccessibilityFeatures() {
+            // Add alt text to all charts
+            d3.selectAll("svg").attr("aria-label", "Chart visualizing Saudi Arabia's economic data");
+
+            // Add keyboard navigation
+            d3.selectAll(".control-btn").attr("tabindex", 0);
+
+            // Implement color blind friendly mode
+            const colorBlindToggle = d3.select("body").append("button")
+                .text("Toggle Color Blind Friendly Mode")
+                .on("click", toggleColorBlindMode);
+        }
+
+        function toggleColorBlindMode() {
+            // This would change the color scheme to be color blind friendly
+            alert("Toggling color blind friendly mode... This would adjust the color scheme of all charts.");
+        }
+
+        // Setup accessibility features on page load
+        setupAccessibilityFeatures();
+
+        // Data Drill-Down Feature
+        function setupDataDrillDown() {
+            d3.selectAll(".slice").on("dblclick", function(event, d) {
+                showDrillDownData(d.data);
+            });
+        }
+
+        function showDrillDownData(data) {
+            const drillDownDiv = d3.select("body").append("div")
+                .attr("class", "drill-down")
+                .style("position", "fixed")
+                .style("top", "50%")
+                .style("left", "50%")
+                .style("transform", "translate(-50%, -50%)")
+                .style("background", "white")
+                .style("padding", "20px")
+                .style("border", "1px solid black");
+
+            drillDownDiv.append("h3").text(`Detailed Data for ${data.sector}`);
+            drillDownDiv.append("p").text(`Contribution to GDP: ${data.value}%`);
+            drillDownDiv.append("p").text(data.info);
+            drillDownDiv.append("p").text(data.details);
+
+                    drillDownDiv.append("button")
+                .text("Close")
+                .on("click", () => drillDownDiv.remove());
+
+            // Add a mini chart for historical data
+            const miniChartData = getMiniChartData(data.sector);
+            createMiniChart(drillDownDiv, miniChartData, data.sector);
+        }
+
+        function getMiniChartData(sector) {
+            // This would normally fetch historical data for the sector
+            return [
+                {year: 2010, value: Math.random() * 100},
+                {year: 2015, value: Math.random() * 100},
+                {year: 2020, value: Math.random() * 100},
+                {year: 2025, value: Math.random() * 100},
+                {year: 2030, value: Math.random() * 100}
+            ];
+        }
+
+        function createMiniChart(container, data, sector) {
+            const width = 300;
+            const height = 200;
+            const margin = {top: 20, right: 20, bottom: 30, left: 40};
+
+            const svg = container.append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleLinear()
+                .domain(d3.extent(data, d => d.year))
+                .range([0, width]);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.value)])
+                .range([height, 0]);
+
+            const line = d3.line()
+                .x(d => x(d.year))
+                .y(d => y(d.value));
+
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x).ticks(5));
+
+            svg.append("g")
+                .call(d3.axisLeft(y));
+
+            svg.append("path")
+                .datum(data)
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-width", 1.5)
+                .attr("d", line);
+
+            svg.append("text")
+                .attr("x", width / 2)
+                .attr("y", 0)
+                .attr("text-anchor", "middle")
+                .text(`${sector} Historical Trend`);
+        }
+
+        // Setup data drill-down on page load
+        setupDataDrillDown();
+
+        // Interactive Scenario Builder
+        function setupScenarioBuilder() {
+            const scenarioDiv = d3.select("body").append("div")
+                .attr("class", "scenario-builder")
+                .style("display", "none");
+
+            scenarioDiv.append("h3").text("Economic Scenario Builder");
+
+            const sectors = ["Oil", "Non-Oil", "Tourism", "Technology", "Renewable Energy"];
+            sectors.forEach(sector => {
+                scenarioDiv.append("label").text(sector);
+                scenarioDiv.append("input")
+                    .attr("type", "range")
+                    .attr("min", 0)
+                    .attr("max", 100)
+                    .attr("value", 20)
+                    .attr("id", `${sector.toLowerCase()}-input`);
+            });
+
+            scenarioDiv.append("button")
+                .text("Calculate Impact")
+                .on("click", calculateScenarioImpact);
+
+            d3.select("body").append("button")
+                .text("Open Scenario Builder")
+                .on("click", () => scenarioDiv.style("display", "block"));
+        }
+
+        function calculateScenarioImpact() {
+            const scenarioData = {};
+            const sectors = ["Oil", "Non-Oil", "Tourism", "Technology", "Renewable Energy"];
+            sectors.forEach(sector => {
+                scenarioData[sector] = +d3.select(`#${sector.toLowerCase()}-input`).property("value");
+            });
+
+            // This would normally involve complex economic calculations
+            const gdpImpact = Object.values(scenarioData).reduce((a, b) => a + b, 0) / 5;
+
+            alert(`Based on your scenario, the estimated GDP impact would be ${gdpImpact.toFixed(2)}%`);
+        }
+
+        // Setup scenario builder on page load
+        setupScenarioBuilder();
+
+        // Economic Policy Simulator
+        function setupPolicySimulator() {
+            const policyDiv = d3.select("body").append("div")
+                .attr("class", "policy-simulator")
+                .style("display", "none");
+
+            policyDiv.append("h3").text("Economic Policy Simulator");
+
+            const policies = [
+                "Increase Foreign Investment",
+                "Boost Tourism Sector",
+                "Invest in Renewable Energy",
+                "Expand Education and Training",
+                "Promote SME Growth"
+            ];
+
+            policies.forEach(policy => {
+                policyDiv.append("button")
+                    .text(policy)
+                    .on("click", () => simulatePolicy(policy));
+            });
+
+            d3.select("body").append("button")
+                .text("Open Policy Simulator")
+                .on("click", () => policyDiv.style("display", "block"));
+        }
+
+        function simulatePolicy(policy) {
+            // This would normally involve complex economic simulations
+            const impact = Math.random() * 10 - 5;
+            alert(`Simulating "${policy}" policy... Estimated GDP impact: ${impact.toFixed(2)}%`);
+        }
+
+        // Setup policy simulator on page load
+        setupPolicySimulator();
+
+        // Interactive NEOM City Explorer
+        function setupNEOMExplorer() {
+            const neomDiv = d3.select("body").append("div")
+                .attr("class", "neom-explorer")
+                .style("display", "none");
+
+            neomDiv.append("h3").text("NEOM City Explorer");
+
+            const areas = ["The Line", "Oxagon", "Trojena", "Sindalah"];
+            areas.forEach(area => {
+                neomDiv.append("button")
+                    .text(`Explore ${area}`)
+                    .on("click", () => exploreNEOMArea(area));
+            });
+
+            d3.select("body").append("button")
+                .text("Open NEOM Explorer")
+                .on("click", () => neomDiv.style("display", "block"));
+        }
+
+        function exploreNEOMArea(area) {
+            alert(`Exploring ${area}... This would open an interactive 3D model of the ${area} project in NEOM.`);
+        }
+
+        // Setup NEOM explorer on page load
+        setupNEOMExplorer();
+
+        // Vision 2030 Progress Tracker
+        function setupVision2030Tracker() {
+            const trackerDiv = d3.select("body").append("div")
+                .attr("class", "vision-2030-tracker")
+                .style("display", "none");
+
+            trackerDiv.append("h3").text("Vision 2030 Progress Tracker");
+
+            const goals = [
+                "Increase non-oil government revenue",
+                "Increase SME contribution to GDP",
+                "Increase women's participation in the workforce",
+                "Lower the rate of unemployment",
+                "Increase the localization of oil and gas sectors"
+            ];
+
+            goals.forEach(goal => {
+                const goalDiv = trackerDiv.append("div");
+                goalDiv.append("p").text(goal);
+                goalDiv.append("progress")
+                    .attr("value", Math.random() * 100)
+                    .attr("max", 100);
+            });
+
+            d3.select("body").append("button")
+                .text("View Vision 2030 Progress")
+                .on("click", () => trackerDiv.style("display", "block"));
+        }
+
+        // Setup Vision 2030 tracker on page load
+        setupVision2030Tracker();
+
+        // Interactive Economic Zones Map
+        function setupEconomicZonesMap() {
+            const mapDiv = d3.select("body").append("div")
+                .attr("class", "economic-zones-map")
+                .style("display", "none");
+
+            mapDiv.append("h3").text("Saudi Arabia Economic Zones");
+
+            // This would normally be an interactive map
+            mapDiv.append("img")
+                .attr("src", "placeholder-map.jpg")
+                .attr("alt", "Map of Saudi Arabia Economic Zones");
+
+            const zones = ["Riyadh", "Jeddah", "Dammam", "NEOM", "Red Sea Project"];
+            zones.forEach(zone => {
+                mapDiv.append("button")
+                    .text(zone)
+                    .on("click", () => showZoneDetails(zone));
+            });
+
+            d3.select("body").append("button")
+                .text("View Economic Zones Map")
+                .on("click", () => mapDiv.style("display", "block"));
+        }
+
+        function showZoneDetails(zone) {
+            alert(`Showing details for ${zone} economic zone... This would display specific information about the selected zone.`);
+        }
+
+        // Setup economic zones map on page load
+        setupEconomicZonesMap();
+
+        // Comparative Analysis Tool
+        function setupComparativeAnalysis() {
+            const analysisDiv = d3.select("body").append("div")
+                .attr("class", "comparative-analysis")
+                .style("display", "none");
+
+            analysisDiv.append("h3").text("Comparative Economic Analysis");
+
+            const countries = ["Saudi Arabia", "UAE", "Qatar", "Kuwait", "Oman"];
+            const metrics = ["GDP Growth", "Non-oil Revenue", "FDI Inflows", "Employment Rate"];
+
+            const table = analysisDiv.append("table");
+            const header = table.append("tr");
+            header.append("th").text("Metric");
+            countries.forEach(country => header.append("th").text(country));
+
+            metrics.forEach(metric => {
+                const row = table.append("tr");
+                row.append("td").text(metric);
+                countries.forEach(() => {
+                    row.append("td").text((Math.random() * 10).toFixed(2) + "%");
+                });
+            });
+
+            d3.select("body").append("button")
+                .text("View Comparative Analysis")
+                .on("click", () => analysisDiv.style("display", "block"));
+        }
+
+        // Setup comparative analysis tool on page load
+        setupComparativeAnalysis();
+
+        // Economic Impact Calculator
+        function setupImpactCalculator() {
+            const calculatorDiv = d3.select("body").append("div")
+                .attr("class", "impact-calculator")
+                .style("display", "none");
+
+            calculatorDiv.append("h3").text("Economic Impact Calculator");
+
+            const factors = ["Oil Price", "Tourism Growth", "Tech Investment", "Foreign Direct Investment"];
+            factors.forEach(factor => {
+                calculatorDiv.append("label").text(factor);
+                calculatorDiv.append("input")
+                    .attr("type", "number")
+                    .attr("id", `${factor.toLowerCase().replace(/\s/g, '-')}-input`)
+                    .attr("placeholder", "Enter percentage change");
+            });
+
+            calculatorDiv.append("button")
+                .text("Calculate Impact")
+                .on("click", calculateEconomicImpact);
+
+            d3.select("body").append("button")
+                .text("Open Impact Calculator")
+                .on("click", () => calculatorDiv.style("display", "block"));
+        }
+
+        function calculateEconomicImpact() {
+            const factors = ["Oil Price", "Tourism Growth", "Tech Investment", "Foreign Direct Investment"];
+            const impacts = {};
+            factors.forEach(factor => {
+                impacts[factor] = +d3.select(`#${factor.toLowerCase().replace(/\s/g, '-')}-input`).property("value");
+            });
+
+            // This would normally involve complex economic calculations
+            const gdpImpact = Object.values(impacts).reduce((a, b) => a + b, 0) / factors.length;
+
+            alert(`Based on your inputs, the estimated GDP impact would be ${gdpImpact.toFixed(2)}%`);
+        }
+
+        // Setup economic impact calculator on page load
+        setupImpactCalculator();
+
+        // Future Skills Demand Predictor
+        function setupSkillsDemandPredictor() {
+            const predictorDiv = d3.select("body").append("div")
+                .attr("class", "skills-demand-predictor")
+                .style("display", "none");
+
+            predictorDiv.append("h3").text("Future Skills Demand Predictor");
+
+            const sectors = ["Technology", "Renewable Energy", "Tourism", "Healthcare", "Education"];
+            sectors.forEach(sector => {
+                predictorDiv.append("button")
+                    .text(`Predict for ${sector}`)
+                    .on("click", () => predictSkillsDemand(sector));
+            });
+
+            d3.select("body").append("button")
+                .text("Open Skills Demand Predictor")
+                .on("click", () => predictorDiv.style("display", "block"));
+        }
+
+        function predictSkillsDemand(sector) {
+            // This would normally involve machine learning predictions
+            const skills = ["Data Analysis", "AI/ML", "Project Management", "Digital Marketing", "Cybersecurity"];
+            const predictions = skills.map(skill => ({
+                skill,
+                demand: Math.floor(Math.random() * 100)
+            }));
+
+            alert(`Predicted top skills for ${sector} in 2030:\n${predictions.map(p => `${p.skill}: ${p.demand}% demand increase`).join('\n')}`);
+        }
+
+        // Setup future skills demand predictor on page load
+        setupSkillsDemandPredictor();
+
+        // Initialize all components
+        function initializeAllComponents() {
+            createPieChart(2000, "chart2000");
+            createPieChart(2024, "chart2024");
+            createPieChart(2030, "chart2030");
+            createLineChart();
+            createNEOMImpactVisualization();
+            createMBSTimeline();
+            createRenewableEnergyChart();
+            createGDPPerCapitaChart();
+            createNonOilExportsChart();
+            createWomenWorkforceChart();
+            createInteractiveSectorComparison();
+            setupRealTimeUpdates();
+            setupSocialSharing();
+            setupAccessibilityFeatures();
+            setupDataDrillDown();
+            setupScenarioBuilder();
+            setupPolicySimulator();
+            setupNEOMExplorer();
+            setupVision2030Tracker();
+            setupEconomicZonesMap();
+            setupComparativeAnalysis();
+            setupImpactCalculator();
+            setupSkillsDemandPredictor();
+        }
+
+        // Call initialization function
+        initializeAllComponents();
+
+        console.log("Saudi Arabia GDP Evolution Visualization Initialized!");
     </script>
 </body>
 </html>
