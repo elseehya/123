@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Saudi Arabia GDP Sector Comparison</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #chart {
+            width: 600px;
+            height: 400px;
+            margin: 0 auto;
+        }
+        .slice {
+            transition: transform 0.2s;
+        }
+        .slice:hover {
+            opacity: 0.8;
+            cursor: pointer;
+            transform: scale(1.05);
+        }
+        #info {
+            width: 300px;
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            display: none;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+        #details {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="chart"></div>
+    <div id="info"></div>
+    <div id="details"></div>
+
+    <script>
+        const data = [
+            {sector: "Oil Sector", value: 60, color: "#FF6384", info: "The oil sector's share has decreased from 87% in 2000 to 60% in 2024 due to diversification efforts.", details: "Key industries: Petroleum, Natural Gas, Petrochemicals"},
+            {sector: "Non-Oil Sector", value: 35, color: "#36A2EB", info: "The non-oil sector has grown significantly from 6% in 2000 to 35% in 2024, reflecting economic diversification.", details: "Key industries: Manufacturing, Tourism, Technology"},
+            {sector: "Public Sector", value: 5, color: "#FFCE56", info: "The public sector's share has remained relatively stable, decreasing slightly from 7% in 2000 to 5% in 2024.", details: "Key areas: Government Services, Education, Healthcare"}
+        ];
+
+        const width = 600;
+        const height = 400;
+        const radius = Math.min(width, height) / 2;
+
+        const svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${width / 2},${height / 2})`);
+
+        const pie = d3.pie().value(d => d.value);
+        const arc = d3.arc().innerRadius(0).outerRadius(radius);
+
+        const arcs = svg.selectAll("arc")
+            .data(pie(data))
+            .enter()
+            .append("g");
+
+        arcs.append("path")
+            .attr("d", arc)
+            .attr("fill", d => d.data.color)
+            .attr("class", "slice")
+            .on("click", showDetails)
+            .on("mousemove", moveInfo)
+            .on("mouseenter", showInfo)
+            .on("mouseleave", hideInfo);
+
+        arcs.append("text")
+            .attr("transform", d => `translate(${arc.centroid(d)})`)
+            .attr("text-anchor", "middle")
+            .text(d => `${d.data.sector} (${d.data.value}%)`);
+
+        let isDragging = false;
+        let startAngle, currentRotation = 0;
+
+        svg.on("mousedown", startDrag)
+            .on("mousemove", drag)
+            .on("mouseup", endDrag)
+            .on("mouseleave", endDrag);
+
+        function startDrag(event) {
+            isDragging = true;
+            startAngle = Math.atan2(event.y - height / 2, event.x - width / 2);
+        }
+
+        function drag(event) {
+            if (isDragging) {
+                const currentAngle = Math.atan2(event.y - height / 2, event.x - width / 2);
+                const rotation = (currentAngle - startAngle) * (180 / Math.PI);
+                currentRotation += rotation;
+                svg.attr("transform", `translate(${width / 2},${height / 2}) rotate(${currentRotation})`);
+                startAngle = currentAngle;
+            }
+        }
+
+        function endDrag() {
+            isDragging = false;
+        }
+
+        function showInfo(event, d) {
+            const info = d3.select("#info");
+            info.style("display", "block")
+                .html(`<h3>${d.data.sector}</h3><p>${d.data.info}</p>`);
+            moveInfo(event);
+        }
+
+        function hideInfo() {
+            d3.select("#info").style("display", "none");
+        }
+
+        function moveInfo(event) {
+            const info = d3.select("#info");
+            info.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY + 10) + "px");
+        }
+
+        function showDetails(event, d) {
+            const details = d3.select("#details");
+            details.html(`
+                <h2>${d.data.sector}</h2>
+                <p>${d.data.info}</p>
+                <p><strong>Additional Details:</strong> ${d.data.details}</p>
+            `);
+
+            // Highlight selected slice
+            d3.selectAll(".slice").attr("opacity", 0.5);
+            d3.select(this).attr("opacity", 1);
+
+            // Animate slice
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("transform", "scale(1.1)")
+                .transition()
+                .duration(200)
+                .attr("transform", "scale(1)");
+        }
+
+        // Add legend
+        const legend = svg.selectAll(".legend")
+            .data(data)
+            .enter()
+            .append("g")
+            .attr("class", "legend")
+            .attr("transform", (d, i) => `translate(-${width / 2}, ${i * 20 - height / 2 + 20})`);
+
+        legend.append("rect")
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", d => d.color);
+
+        legend.append("text")
+            .attr("x", 24)
+            .attr("y", 9)
+            .attr("dy", ".35em")
+            .text(d => d.sector);
+
+        // Add zoom functionality
+        const zoom = d3.zoom()
+            .scaleExtent([0.5, 3])
+            .on("zoom", (event) => {
+                svg.attr("transform", event.transform);
+            });
+
+        d3.select("svg").call(zoom);
+    </script>
+</body>
+</html>
