@@ -10,7 +10,7 @@
         body {
             font-family: 'Arial', sans-serif;
             line-height: 1.6;
-            color: #e0e0e0;
+            color: #ffffff;
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
@@ -35,15 +35,9 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            transition: transform 1s;
+            transition: transform 1s, opacity 0.5s;
             transform-style: preserve-3d;
             backface-visibility: hidden;
-        }
-        .chart-front {
-            transform: rotateY(0deg);
-        }
-        .chart-back {
-            transform: rotateY(180deg);
         }
         .button-container {
             display: flex;
@@ -85,54 +79,8 @@
         .sector-card:hover {
             transform: translateY(-5px);
         }
-        .timeline {
+        #prediction-chart, #neom-impact-chart, #fuel-reserves-chart {
             margin-top: 40px;
-            position: relative;
-            padding: 20px 0;
-        }
-        .timeline::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: 2px;
-            height: 100%;
-            background: #00ffff;
-        }
-        .timeline-item {
-            margin-bottom: 30px;
-            position: relative;
-        }
-        .timeline-content {
-            background-color: #000066;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-            padding: 15px;
-            width: 45%;
-        }
-        .timeline-item:nth-child(even) .timeline-content {
-            margin-left: auto;
-        }
-        .timeline-item::after {
-            content: '';
-            position: absolute;
-            top: 15px;
-            right: -13px;
-            width: 25px;
-            height: 25px;
-            background: #00ffff;
-            border-radius: 50%;
-        }
-        .timeline-item:nth-child(even)::after {
-            left: -12px;
-        }
-        #prediction-chart, #neom-impact-chart {
-            margin-top: 40px;
-        }
-        .animated-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #00ffff;
         }
     </style>
 </head>
@@ -147,9 +95,7 @@
         </div>
 
         <div class="chart-container">
-            <div class="chart chart-front">
-                <canvas id="gdpChart"></canvas>
-            </div>
+            <canvas id="gdpChart"></canvas>
         </div>
 
         <div class="info-box">
@@ -196,40 +142,6 @@
             </div>
         </div>
 
-        <div class="timeline">
-            <h2>Vision 2030 and NEOM Timeline</h2>
-            <div class="timeline-item">
-                <div class="timeline-content">
-                    <h3>2016</h3>
-                    <p>Vision 2030 announced by Crown Prince Mohammed bin Salman</p>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-content">
-                    <h3>2017</h3>
-                    <p>NEOM project unveiled, with $500 billion investment plan</p>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-content">
-                    <h3>2020</h3>
-                    <p>Construction begins on NEOM's first urban area, "The Line"</p>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-content">
-                    <h3>2024</h3>
-                    <p>Projected completion of NEOM's first phase</p>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-content">
-                    <h3>2030</h3>
-                    <p>Target year for achieving Vision 2030 goals</p>
-                </div>
-            </div>
-        </div>
-
         <div id="prediction-chart">
             <h2>GDP Growth Prediction (2020-2030)</h2>
             <canvas id="gdpPredictionChart"></canvas>
@@ -240,11 +152,9 @@
             <canvas id="neomImpactChart"></canvas>
         </div>
 
-        <div class="info-box">
-            <h2>NEOM Key Facts</h2>
-            <p>Total area: <span class="animated-number" id="neomArea">0</span> km²</p>
-            <p>Estimated investment: $<span class="animated-number" id="neomInvestment">0</span> billion</p>
-            <p>Projected population by 2030: <span class="animated-number" id="neomPopulation">0</span> million</p>
+        <div id="fuel-reserves-chart">
+            <h2>Saudi Arabia Fuel Reserves Projection (Next 100 Years)</h2>
+            <canvas id="fuelReservesChart"></canvas>
         </div>
     </div>
 
@@ -273,6 +183,7 @@
         };
 
         let currentChart;
+        let isSpinning = false;
 
         function createPieChart(year) {
             const ctx = document.getElementById('gdpChart').getContext('2d');
@@ -297,7 +208,7 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                color: '#e0e0e0'
+                                color: '#ffffff'
                             }
                         },
                         title: {
@@ -315,17 +226,47 @@
                                 }
                             }
                         }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true
                     }
                 }
             });
+
+            // Add mouse events for spinning
+            ctx.canvas.addEventListener('mousedown', startSpinning);
+            ctx.canvas.addEventListener('mouseup', stopSpinning);
+            ctx.canvas.addEventListener('mouseleave', stopSpinning);
+        }
+
+        function startSpinning() {
+            isSpinning = true;
+            spinChart();
+        }
+
+        function stopSpinning() {
+            isSpinning = false;
+        }
+
+        function spinChart() {
+            if (isSpinning) {
+                currentChart.options.rotation += 5;
+                currentChart.update();
+                requestAnimationFrame(spinChart);
+            }
         }
 
         function showChart(year) {
             const container = document.querySelector('.chart-container');
-            container.style.transform = 'rotateY(180deg)';
+            container.style.opacity = 0;
             setTimeout(() => {
                 createPieChart(year);
-                container.style.transform = 'rotateY(0deg)';
+                container.style.opacity = 1;
+                container.style.transform = 'rotate(360deg)';
+                setTimeout(() => {
+                    container.style.transform = 'rotate(0deg)';
+                }, 1000);
             }, 500);
         }
 
@@ -352,7 +293,7 @@
                     legend: {
                         position: 'top',
                         labels: {
-                            color: '#e0e0e0'
+                            color: '#ffffff'
                         }
                     },
                     title: {
@@ -367,20 +308,20 @@
                         title: {
                             display: true,
                             text: 'GDP (Billion USD)',
-                            color: '#e0e0e0'
+                            color: '#ffffff'
                         },
                         ticks: {
-                            color: '#e0e0e0'
+                            color: '#ffffff'
                         }
                     },
                     x: {
                         title: {
                             display: true,
                             text: 'Year',
-                            color: '#e0e0e0'
+                            color: '#ffffff'
                         },
                         ticks: {
-                            color: '#e0e0e0'
+                            color: '#ffffff'
                         }
                     }
                 }
@@ -402,9 +343,9 @@
                 }, {
                     label: 'With NEOM',
                     data: [50, 70, 60, 80, 75],
-                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                    borderColor: 'rgba(52, 152, 219, 1)',
-                    pointBackgroundColor: 'rgba(52, 152, 219, 1)'
+                    backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                    borderColor: 'rgba(0, 255, 255, 1)',
+                    pointBackgroundColor: 'rgba(0, 255, 255, 1)'
                 }]
             },
             options: {
@@ -413,7 +354,7 @@
                     legend: {
                         position: 'top',
                         labels: {
-                            color: '#e0e0e0'
+                            color: '#ffffff'
                         }
                     },
                     title: {
@@ -427,7 +368,7 @@
                         min: 0,
                         max: 100,
                         ticks: {
-                            color: '#e0e0e0'
+                            color: '#ffffff'
                         },
                         grid: {
                             color: '#00ffff'
@@ -437,265 +378,219 @@
             }
         });
 
-        // Animated Numbers for NEOM Key Facts
-        function animateNumbers() {
-            const neomFacts = [
-                { id: 'neomArea', value: 26500, label: 'Total area (km²)' },
-                { id: 'neomInvestment', value: 500, label: 'Estimated investment (billion USD)' },
-                { id: 'neomPopulation', value: 1.5, label: 'Projected population (million)' }
-            ];
-
-            neomFacts.forEach(fact => {
-                const element = document.getElementById(fact.id);
-                let currentValue = 0;
-                const increment = Math.ceil(fact.value / 100);
-
-                const interval = setInterval(() => {
-                    if (currentValue < fact.value) {
-                        currentValue += increment;
-                        element.textContent = currentValue > fact.value ? fact.value : currentValue;
-                    } else {
-                        clearInterval(interval);
+        // Fuel Reserves Chart
+        const fuelReservesCtx = document.getElementById('fuelReservesChart').getContext('2d');
+        new Chart(fuelReservesCtx, {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: 10}, (_, i) => 2030 + i * 10),
+                datasets: [{
+                    label: 'Projected Fuel Reserves (Billion Barrels)',
+                    data: [260, 220, 180, 150, 120, 90, 70, 50, 30, 20],
+                    backgroundColor: '#0077be'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#ffffff'
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Saudi Arabia Fuel Reserves Projection',
+                        color: '#00ffff'
                     }
-                }, 20);
-            });
-        }
-
-        // Call animateNumbers on page load
-        animateNumbers();
-
-        // Interactive Sector Comparison
-        function createInteractiveSectorComparison() {
-            const sectorComparisonSvg = d3.select("#neom-impact-chart")
-                .append("svg")
-                .attr("width", 800)
-                .attr("height", 600);
-
-            const sectors = ["Oil", "Non-Oil", "Tourism", "Technology", "Renewable Energy", "Healthcare", "Education"];
-            const years = [2016, 2024, 2030];
-
-            const sectorData = {
-                Oil: [87, 50, 35],
-                "Non-Oil": [6, 30, 35],
-                Tourism: [2, 10, 15],
-                Technology: [1, 5, 10],
-                "Renewable Energy": [0, 5, 10],
-                Healthcare: [2, 5, 7],
-                Education: [2, 8, 8]
-            };
-
-            const xScale = d3.scaleBand()
-                .domain(sectors)
-                .range([0, 800])
-                .padding(0.1);
-
-            const yScale = d3.scaleLinear()
-                .domain([0, 100])
-                .range([550, 50]);
-
-            const colorScale = d3.scaleOrdinal()
-                .domain(years)
-                .range(["#00ffff", "#0077be", "#005f9e"]);
-
-            sectors.forEach(sector => {
-                const sectorGroup = sectorComparisonSvg.append("g")
-                    .attr("class", "sector-group");
-
-                years.forEach((year, index) => {
-                    sectorGroup.append("rect")
-                        .attr("x", xScale(sector) + (index * xScale.bandwidth() / 3))
-                        .attr("y", yScale(sectorData[sector][index]))
-                        .attr("width", xScale.bandwidth() / 3)
-                        .attr("height", 550 - yScale(sectorData[sector][index]))
-                        .attr("fill", colorScale(year))
-                        .on("mouseover", function(event, d) {
-                            d3.select(this).attr("opacity", 0.8);
-                            showTooltip(event, `${sector} in ${year}: ${sectorData[sector][index]}%`);
-                        })
-                        .on("mouseout", function() {
-                            d3.select(this).attr("opacity", 1);
-                            hideTooltip();
-                        })
-                        .on("click", function() {
-                            showDetailedSectorInfo(sector, year, sectorData[sector][index]);
-                        });
-                });
-            });
-
-            sectorComparisonSvg.append("g")
-                .attr("transform", "translate(0,550)")
-                .call(d3.axisBottom(xScale));
-
-            sectorComparisonSvg.append("g")
-                .call(d3.axisLeft(yScale));
-
-            sectorComparisonSvg.append("text")
-                .attr("x", 400)
-                .attr("y", 30)
-                .attr("text-anchor", "middle")
-                .text("Interactive Sector Comparison Over Years");
-
-            // Legend
-            const legend = sectorComparisonSvg.append("g")
-                .attr("class", "legend")
-                .attr("transform", "translate(650, 50)");
-
-            years.forEach((year, i) => {
-                legend.append("rect")
-                    .attr("x", 0)
-                    .attr("y", i * 25)
-                    .attr("width", 20)
-                    .attr("height", 20)
-                    .attr("fill", colorScale(year));
-
-                legend.append("text")
-                    .attr("x", 30)
-                    .attr("y", i * 25 + 15)
-                    .text(year);
-            });
-        }
-
-      <div id="sector-comparison">
-    <h2>Interactive Sector Comparison</h2>
-</div>
-        function createInteractiveSectorComparison() {
-    const width = 800;
-    const height = 600;
-    const margin = {top: 20, right: 30, bottom: 40, left: 50};
-
-    const svg = d3.select("#sector-comparison")
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    const sectors = ["Oil", "Non-Oil", "Tourism", "Technology", "Renewable Energy", "Healthcare", "Education"];
-    const years = [2016, 2024, 2030];
-
-    const sectorData = {
-        Oil: [87, 50, 35],
-        "Non-Oil": [6, 30, 35],
-        Tourism: [2, 10, 15],
-        Technology: [1, 5, 10],
-        "Renewable Energy": [0, 5, 10],
-        Healthcare: [2, 5, 7],
-        Education: [2, 8, 8]
-    };
-
-    const xScale = d3.scaleBand()
-        .domain(sectors)
-        .range([0, width])
-        .padding(0.1);
-
-    const yScale = d3.scaleLinear()
-        .domain([0, 100])
-        .range([height, 0]);
-
-    const colorScale = d3.scaleOrdinal()
-        .domain(years)
-        .range(["#00ffff", "#0077be", "#005f9e"]);
-
-    sectors.forEach(sector => {
-        years.forEach((year, index) => {
-            svg.append("rect")
-                .attr("x", xScale(sector) + (index * xScale.bandwidth() / 3))
-                .attr("y", yScale(sectorData[sector][index]))
-                .attr("width", xScale.bandwidth() / 3)
-                .attr("height", height - yScale(sectorData[sector][index]))
-                .attr("fill", colorScale(year))
-                .on("mouseover", function(event) {
-                    d3.select(this).attr("opacity", 0.8);
-                    showTooltip(event, `${sector} in ${year}: ${sectorData[sector][index]}%`);
-                })
-                .on("mouseout", function() {
-                    d3.select(this).attr("opacity", 1);
-                    hideTooltip();
-                });
+                },
+                scales: {
+                                        y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Fuel Reserves (Billion Barrels)',
+                            color: '#ffffff'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year',
+                            color: '#ffffff'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    }
+                },
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const year = 2030 + index * 10;
+                        const reserves = fuelReservesCtx.chart.data.datasets[0].data[index];
+                        alert(`In ${year}, projected fuel reserves: ${reserves} billion barrels`);
+                    }
+                }
+            }
         });
-    });
 
-    svg.append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(xScale));
+        // Add interactivity to the Fuel Reserves Chart
+        fuelReservesCtx.canvas.addEventListener('mousemove', (event) => {
+            const activePoints = fuelReservesCtx.chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+            if (activePoints.length > 0) {
+                fuelReservesCtx.canvas.style.cursor = 'pointer';
+            } else {
+                fuelReservesCtx.canvas.style.cursor = 'default';
+            }
+        });
 
-    svg.append("g")
-        .call(d3.axisLeft(yScale));
-
-    // Add legend
-    const legend = svg.append("g")
-        .attr("class", "legend")
-        .attr("transform", `translate(${width - 100}, 20)`);
-
-    years.forEach((year, i) => {
-        legend.append("rect")
-            .attr("x", 0)
-            .attr("y", i * 25)
-            .attr("width", 20)
-            .attr("height", 20)
-            .attr("fill", colorScale(year));
-
-        legend.append("text")
-            .attr("x", 30)
-            .attr("y", i * 25 + 15)
-            .text(year);
-    });
-}
-function showTooltip(event, text) {
-    const tooltip = d3.select("body").append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0)
-        .style("position", "absolute")
-        .style("background-color", "white")
-        .style("border", "solid")
-        .style("border-width", "1px")
-        .style("border-radius", "5px")
-        .style("padding", "10px");
-
-    tooltip.transition()
-        .duration(200)
-        .style("opacity", .9);
-    tooltip.html(text)
-        .style("left", (event.pageX + 10) + "px")
-        .style("top", (event.pageY - 28) + "px");
-}
-
-function hideTooltip() {
-    d3.select(".tooltip").remove();
-}
-// Call the function to create the visualization
-createInteractiveSectorComparison();
-        // Initialize all components
-        function initializeAllComponents() {
-            createPieChart(2000);
-            createPieChart(2024);
-            createPieChart(2030);
-            createLineChart();
-            createNEOMImpactVisualization();
-            createMBSTimeline();
-            createRenewableEnergyChart();
-            createGDPPerCapitaChart();
-            createNonOilExportsChart();
-            createWomenWorkforceChart();
-            createInteractiveSectorComparison();
-            setupRealTimeUpdates();
-            setupSocialSharing();
-            setupAccessibilityFeatures();
-            setupDataDrillDown();
-            setupScenarioBuilder();
-            setupPolicySimulator();
-            setupNEOMExplorer();
-            setupVision2030Tracker();
-            setupEconomicZonesMap();
-            setupComparativeAnalysis();
-            setupImpactCalculator();
-            setupSkillsDemandPredictor();
+        // Function to update chart colors dynamically
+        function updateChartColors(chart, newColors) {
+            chart.data.datasets.forEach((dataset, i) => {
+                dataset.backgroundColor = newColors[i % newColors.length];
+            });
+            chart.update();
         }
 
-        // Call initialization function
-        initializeAllComponents();
+        // Add color change functionality to NEOM Impact Chart
+        document.getElementById('neomImpactChart').addEventListener('click', () => {
+            const newColors = [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)'
+            ];
+            updateChartColors(neomImpactCtx.chart, newColors);
+        });
 
-        console.log("Saudi Arabia GDP Evolution Visualization Initialized!");
+        // Add animated number display
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Animate GDP value
+        const gdpValueElement = document.createElement('div');
+        gdpValueElement.id = 'gdpValue';
+        gdpValueElement.style.fontSize = '24px';
+        gdpValueElement.style.fontWeight = 'bold';
+        gdpValueElement.style.color = '#00ffff';
+        gdpValueElement.style.textAlign = 'center';
+        gdpValueElement.style.marginTop = '20px';
+        document.querySelector('.container').appendChild(gdpValueElement);
+
+        animateValue(gdpValueElement, 0, 1100, 3000); // Animate to the 2030 predicted GDP value
+
+        // Add a slider to control the year for GDP Split
+        const slider = document.createElement('input');
+        slider.type = 'range';
+        slider.min = 2000;
+        slider.max = 2030;
+        slider.value = 2024;
+        slider.step = 1;
+        slider.style.width = '100%';
+        slider.style.marginTop = '20px';
+
+        const sliderValue = document.createElement('div');
+        sliderValue.style.textAlign = 'center';
+        sliderValue.style.marginTop = '10px';
+        sliderValue.style.color = '#ffffff';
+
+        document.querySelector('.chart-container').after(slider);
+        slider.after(sliderValue);
+
+        slider.addEventListener('input', (event) => {
+            const year = parseInt(event.target.value);
+            sliderValue.textContent = `Year: ${year}`;
+            updateGDPChart(year);
+        });
+
+        function updateGDPChart(year) {
+            const nearestYear = Object.keys(gdpData).reduce((prev, curr) => 
+                Math.abs(curr - year) < Math.abs(prev - year) ? curr : prev
+            );
+            createPieChart(nearestYear);
+        }
+
+        // Add a pulsating effect to the NEOM info box
+        const neomInfoBox = document.querySelector('.info-box');
+        setInterval(() => {
+            neomInfoBox.style.boxShadow = '0 0 10px #00ffff';
+            setTimeout(() => {
+                neomInfoBox.style.boxShadow = 'none';
+            }, 500);
+        }, 3000);
+
+        // Add a floating animation to sector cards
+        const sectorCards = document.querySelectorAll('.sector-card');
+        sectorCards.forEach((card, index) => {
+            card.style.animation = `float 3s ease-in-out ${index * 0.5}s infinite`;
+        });
+
+        // Add keyframe animation for floating effect
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+                100% { transform: translateY(0px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Add a particle background effect
+        const particleContainer = document.createElement('div');
+        particleContainer.id = 'particle-container';
+        particleContainer.style.position = 'fixed';
+        particleContainer.style.top = '0';
+        particleContainer.style.left = '0';
+        particleContainer.style.width = '100%';
+        particleContainer.style.height = '100%';
+        particleContainer.style.pointerEvents = 'none';
+        particleContainer.style.zIndex = '-1';
+        document.body.appendChild(particleContainer);
+
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.style.position = 'absolute';
+            particle.style.width = '2px';
+            particle.style.height = '2px';
+            particle.style.background = '#00ffff';
+            particle.style.left = Math.random() * 100 + 'vw';
+            particle.style.top = Math.random() * 100 + 'vh';
+            particle.style.opacity = Math.random();
+            particle.style.animation = `fall ${Math.random() * 10 + 5}s linear infinite`;
+            particleContainer.appendChild(particle);
+
+            setTimeout(() => {
+                particle.remove();
+            }, 15000);
+        }
+
+        setInterval(createParticle, 200);
+
+        // Add keyframe animation for particle fall effect
+        const particleStyle = document.createElement('style');
+        particleStyle.textContent = `
+            @keyframes fall {
+                0% { transform: translateY(-10vh); }
+                100% { transform: translateY(110vh); }
+            }
+        `;
+        document.head.appendChild(particleStyle);
+
+        console.log("Enhanced Saudi Arabia GDP Evolution Visualization Initialized!");
     </script>
 </body>
 </html>
