@@ -23,10 +23,9 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
             padding: 20px;
         }
-        h1 {
-            text-align: center;
+        h1, h2, h3 {
             color: #2c3e50;
-            margin-bottom: 30px;
+            text-align: center;
         }
         .chart-container {
             display: flex;
@@ -82,9 +81,6 @@
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .legend {
-            font-size: 12px;
-        }
         .controls {
             display: flex;
             justify-content: center;
@@ -105,28 +101,6 @@
         .control-btn:hover {
             background-color: #2980b9;
             transform: translateY(-2px);
-        }
-        .color-picker {
-            display: none;
-            position: absolute;
-            background: white;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 1000;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
         .comparison-table {
             width: 100%;
@@ -228,13 +202,6 @@
             margin-top: 30px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        #neom-info h2 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-        #neom-info p {
-            line-height: 1.6;
-        }
         .sector-breakdown {
             display: flex;
             justify-content: space-around;
@@ -262,6 +229,23 @@
             font-size: 14px;
             color: #7f8c8d;
         }
+        #line-chart {
+            width: 100%;
+            height: 400px;
+            margin-top: 30px;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
     </style>
 </head>
 <body>
@@ -275,6 +259,7 @@
             <button id="toggleLegend" class="control-btn">Toggle Legend</button>
             <button id="showComparison" class="control-btn">Show Comparison Table</button>
             <button id="showTimeline" class="control-btn">Show Timeline</button>
+            <button id="showLineChart" class="control-btn">Show Line Chart</button>
         </div>
 
         <div class="chart-container">
@@ -291,7 +276,6 @@
 
         <div id="info"></div>
         <div id="details"></div>
-        <div class="color-picker" id="colorPicker"></div>
 
         <div id="comparisonTable" style="display: none;">
             <h2>Sector Comparison Table</h2>
@@ -312,30 +296,12 @@
 
         <div id="timeline" class="timeline" style="display: none;">
             <h2>Saudi Arabia's Economic Timeline</h2>
-            <div class="timeline-container left">
-                <div class="timeline-content">
-                    <h3>2000</h3>
-                    <p>Oil sector dominates with 87% of GDP.</p>
-                </div>
-            </div>
-            <div class="timeline-container right">
-                <div class="timeline-content">
-                    <h3>2016</h3>
-                    <p>Vision 2030 announced, aiming for economic diversification.</p>
-                </div>
-            </div>
-            <div class="timeline-container left">
-                <div class="timeline-content">
-                    <h3>2024</h3>
-                    <p>Non-oil sector grows to 30%, tourism sector emerges.</p>
-                </div>
-            </div>
-            <div class="timeline-container right">
-                <div class="timeline-content">
-                    <h3>2030</h3>
-                    <p>NEOM project launched, aiming to transform the economy.</p>
-                </div>
-            </div>
+            <!-- Timeline content will be dynamically populated -->
+        </div>
+
+        <div id="line-chart" style="display: none;">
+            <h2>GDP Sector Growth Over Time</h2>
+            <!-- Line chart will be rendered here -->
         </div>
 
         <div id="neom-info">
@@ -369,16 +335,16 @@
                 <p>Driving innovation and creating new economic opportunities</p>
             </div>
             <div class="sector-card">
-                <h3>Healthcare Sector</h3>
-                <p>Expanding to meet the needs of a growing population and improving quality of life</p>
+                <h3>Renewable Energy</h3>
+                <p>Growing sector aimed at reducing reliance on fossil fuels</p>
             </div>
             <div class="sector-card">
-                <h3>Education Sector</h3>
-                <p>Investing in education to build a skilled workforce for the future</p>
+                <h3>Healthcare</h3>
+                <p>Expanding to meet the needs of a growing population</p>
             </div>
             <div class="sector-card">
-                <h3>Construction Sector</h3>
-                <p>Growing rapidly due to urbanization and infrastructure development</p>
+                <h3>Education</h3>
+                <p>Investing in human capital to support economic diversification</p>
             </div>
         </div>
     </div>
@@ -396,9 +362,9 @@
                 {sector: "Public Sector", value: 5, color: "#FFCE56", info: "The public sector's share has decreased slightly.", details: "Key areas: Government Services, Education, Healthcare"},
                 {sector: "Tourism Sector", value: 10, color: "#4BC0C0", info: "Tourism has been growing, supported by Vision 2030 initiatives.", details: "Key attractions: NEOM, heritage sites, Red Sea resorts"},
                 {sector: "Technology Sector", value: 5, color: "#9966FF", info: "Emerging technology sector driven by Vision 2030.", details: "Key areas: AI, Robotics, Smart Cities"},
-                {sector: "Healthcare Sector", value: 5, color: "#FF9F40", info: "Healthcare sector expanding to meet the needs of the population.", details: "Key areas: Hospitals, Clinics, Health Services"},
-                {sector: "Education Sector", value: 5, color: "#4BC0C0", info: "Investment in education to build a skilled workforce.", details: "Key areas: Universities, Vocational Training"},
-                {sector: "Construction Sector", value: 5, color: "#FFCE56", info: "Construction sector growing due to urbanization.", details: "Key projects: Infrastructure, Housing"}
+                {sector: "Renewable Energy", value: 5, color: "#FF9F40", info: "Renewable energy initiatives are gaining traction.", details: "Key focus: Solar, Wind, and Hydrogen energy"},
+                {sector: "Healthcare", value: 5, color: "#FFCE56", info: "Healthcare sector projected to expand further.", details: "Key focus: Medical Tourism, Telemedicine, Biotechnology"},
+                {sector: "Education", value: 8, color: "#4BC0C0", info: "Education sector expected to play a crucial role in economic transformation.", details: "Key areas: STEM Education, Online Learning, Research & Development"}
             ],
             2030: [
                 {sector: "Oil Sector", value: 35, color: "#FF6384", info: "Projected decrease in oil sector share due to Vision 2030 initiatives.", details: "Key focus: Sustainable Energy, Advanced Oil Technologies"},
@@ -406,15 +372,15 @@
                 {sector: "Public Sector", value: 5, color: "#FFCE56", info: "Public sector expected to maintain a stable but efficient presence.", details: "Key areas: E-government, Smart Cities, Public-Private Partnerships"},
                 {sector: "Tourism Sector", value: 15, color: "#4BC0C0", info: "Tourism projected to become a major contributor to GDP.", details: "Key projects: NEOM, Red Sea Project, Qiddiya"},
                 {sector: "Technology Sector", value: 10, color: "#9966FF", info: "Technology sector expected to grow rapidly.", details: "Key areas: AI, Blockchain, IoT, Cybersecurity"},
-                {sector: "Healthcare Sector", value: 7, color: "#FF9F40", info: "Healthcare sector projected to expand further.", details: "Key focus: Medical Tourism, Telemedicine, Biotechnology"},
-                {sector: "Education Sector", value: 8, color: "#4BC0C0", info: "Education sector expected to play a crucial role in economic transformation.", details: "Key areas: STEM Education, Online Learning, Research & Development"},
-                {sector: "Construction Sector", value: 10, color: "#FFCE56", info: "Construction sector projected to maintain growth.", details: "Key projects: Smart Cities, Sustainable Infrastructure"}
+                {sector: "Renewable Energy", value: 5, color: "#FF9F40", info: "Renewable energy initiatives are gaining traction.", details: "Key focus: Solar, Wind, and Hydrogen energy"},
+                {sector: "Healthcare", value: 7, color: "#FFCE56", info: "Healthcare sector projected to expand further.", details: "Key focus: Medical Tourism, Telemedicine, Biotechnology"},
+                {sector: "Education", value: 8, color: "#4BC0C0", info: "Education sector expected to play a crucial role in economic transformation.", details: "Key areas: STEM Education, Online Learning, Research & Development"}
             ]
         };
 
         const width = 400;
-        const height = 400;
-        const radius = Math.min(width, height) / 2;
+        const height = 400
+                const radius = Math.min(width, height) / 2;
 
         const pie = d3.pie().value(d => d.value);
         const arc = d3.arc().innerRadius(0).outerRadius(radius);
@@ -466,45 +432,6 @@
                 .attr("y", 9)
                 .attr("dy", ".35em")
                 .text(d => d.sector);
-
-            // Add rotation functionality
-            let isDragging = false;
-            let startAngle, currentRotation = 0;
-
-            svg.on("mousedown", startDrag)
-                .on("mousemove", drag)
-                .on("mouseup", endDrag)
-                .on("mouseleave", endDrag);
-
-            function startDrag(event) {
-                isDragging = true;
-                startAngle = Math.atan2(event.y - height / 2, event.x - width / 2);
-            }
-
-            function drag(event) {
-                if (isDragging) {
-                    const currentAngle = Math.atan2(event.y - height / 2, event.x - width / 2);
-                    const rotation = (currentAngle - startAngle) * (180 / Math.PI);
-                    currentRotation += rotation;
-                    svg.attr("transform", `translate(${width / 2},${height / 2}) rotate(${currentRotation})`);
-                    startAngle = currentAngle;
-                }
-            }
-
-            function endDrag() {
-                isDragging = false;
-            }
-
-            // Add zoom functionality
-            const zoom = d3.zoom()
-                .scaleExtent([0.5, 3])
-                .on("zoom", (event) => {
-                    svg.attr("transform", event.transform);
-                });
-
-            d3.select(`#${containerId} svg`).call(zoom);
-
-            return svg;
         }
 
         const svg2000 = createPieChart(2000, "chart2000");
@@ -535,19 +462,6 @@
                 <p>${d.data.info}</p>
                 <p><strong>Additional Details:</strong> ${d.data.details}</p>
             `);
-
-            // Highlight selected slice
-            d3.selectAll(".slice").attr("opacity", 0.5);
-            d3.select(this).attr("opacity", 1);
-
-            // Animate slice
-            d3.select(this)
-                .transition()
-                .duration(200)
-                .attr("transform", "scale(1.1)")
-                .transition()
-                .duration(200)
-                .attr("transform", "scale(1)");
         }
 
         // Animation function
@@ -581,23 +495,6 @@
                         };
                     });
             }, transitionDuration);
-
-            // Update text
-            svg2000.selectAll("text")
-                .data(pie(data[2024]))
-                .transition()
-                .duration(transitionDuration)
-                .attr("transform", d => `translate(${arc.centroid(d)})`)
-                .text(d => `${d.data.sector} (${d.data.value}%)`);
-
-            setTimeout(() => {
-                svg2024.selectAll("text")
-                    .data(pie(data[2030]))
-                    .transition()
-                    .duration(transitionDuration)
-                    .attr("transform", d => `translate(${arc.centroid(d)})`)
-                    .text(d => `${d.data.sector} (${d.data.value}%)`);
-            }, transitionDuration);
         }
 
         // Reset function
@@ -615,13 +512,6 @@
                             return arc(interpolate(t));
                         };
                     });
-
-                svg.selectAll("text")
-                    .data(pie(data[year]))
-                    .transition()
-                    .duration(1000)
-                    .attr("transform", d => `translate(${arc.centroid(d)})`)
-                    .text(d => `${d.data.sector} (${d.data.value}%)`);
             });
         }
 
@@ -635,150 +525,6 @@
                 pdf.save("saudi_arabia_gdp_evolution.pdf");
             });
         }
-
-        // Toggle legend function
-        function toggleLegend() {
-            const legends = d3.selectAll(".legend");
-            legends.style("display", legends.style("display") === "none" ? "block" : "none");
-        }
-
-        // Show comparison table function
-        function showComparisonTable() {
-            const table = d3.select("#comparisonTable");
-            table.style("display", table.style("display") === "none" ? "block" : "none");
-
-            if (table.style("display") === "block") {
-                const tbody = d3.select("#comparisonTableBody");
-                tbody.html("");
-
-                const allSectors = [...new Set([...data[2000], ...data[2024], ...data[2030]].map(d => d.sector))];
-
-                allSectors.forEach(sector => {
-                    const row = tbody.append("tr");
-                    row.append("td").text(sector);
-                    [2000, 2024, 2030].forEach(year => {
-                        const sectorData = data[year].find(d => d.sector === sector);
-                        row.append("td").text(sectorData ? sectorData.value + "%" : "N/A");
-                    });
-                });
-            }
-        }
-
-        // Show timeline function
-        function showTimeline() {
-            const timeline = d3.select("#timeline");
-            timeline.style("display", timeline.style("display") === "none" ? "block" : "none");
-        }
-
-        // Event listeners
-        d3.select("#animateBtn").on("click", animateChanges);
-        d3.select("#resetBtn").on("click", resetCharts);
-        d3.select("#exportPDF").on("click", exportAsPDF);
-        d3.select("#toggleLegend").on("click", toggleLegend);
-        d3.select("#showComparison").on("click", showComparisonTable);
-        d3.select("#showTimeline").on("click", showTimeline);
-
-        // Additional interactive features
-
-        // Color customization
-        function showColorPicker(event, d) {
-            const colorPicker = d3.select("#colorPicker");
-            colorPicker.style("display", "block")
-                .style("left", (event.pageX + 10) + "px")
-                .style("top", (event.pageY + 10) + "px")
-                .html(`
-                    <input type="color" id="sectorColor" value="${d.data.color}">
-                    <button id="applyColor">Apply</button>
-                `);
-
-            d3.select("#applyColor").on("click", () => {
-                const newColor = d3.select("#sectorColor").property("value");
-                d.data.color = newColor;
-                d3.select(event.currentTarget).attr("fill", newColor);
-                colorPicker.style("display", "none");
-            });
-        }
-
-        d3.selectAll(".slice").on("contextmenu", showColorPicker);
-
-        // Filtering
-        function filterSectors(minValue) {
-            [svg2000, svg2024, svg2030].forEach((svg, index) => {
-                const year = [2000, 2024, 2030][index];
-                const filteredData = data[year].filter(d => d.value >= minValue);
-                
-                svg.selectAll(".slice")
-                    .data(pie(filteredData))
-                    .transition()
-                    .duration(1000)
-                    .attrTween("d", function(d) {
-                        const interpolate = d3.interpolate(this._current, d);
-                        this._current = interpolate(0);
-                        return function(t) {
-                            return arc(interpolate(t));
-                        };
-                    });
-
-                svg.selectAll("text")
-                    .data(pie(filteredData))
-                    .transition()
-                    .duration(1000)
-                    .attr("transform", d => `translate(${arc.centroid(d)})`)
-                    .text(d => `${d.data.sector} (${d.data.value}%)`);
-            });
-        }
-
-        // Add filter control
-        d3.select(".controls")
-            .append("div")
-            .html(`
-                <label for="filterValue">Filter sectors with value >=</label>
-                <input type="number" id="filterValue" min="0" max="100" value="0">
-                <button id="applyFilter">Apply Filter</button>
-            `);
-
-        d3.select("#applyFilter").on("click", () => {
-            const minValue = +d3.select("#filterValue").property("value");
-            filterSectors(minValue);
-        });
-
-        // Responsive design
-        function resizeCharts() {
-            const containerWidth = d3.select(".chart-container").node().getBoundingClientRect().width;
-            const newWidth = Math.min(400, containerWidth / 3 - 40);
-            const newHeight = newWidth;
-
-            d3.selectAll(".chart")
-                .style("width", newWidth + "px")
-                .style("height", newHeight + "px");
-
-            d3.selectAll(".chart svg")
-                .attr("width", newWidth)
-                .attr("height", newHeight);
-
-            d3.selectAll(".chart g")
-                .attr("transform", `translate(${newWidth / 2},${newHeight / 2})`);
-
-            const newRadius = Math.
-                            const newRadius = Math.min(newWidth, newHeight) / 2;
-            const newArc = d3.arc().innerRadius(0).outerRadius(newRadius);
-
-            d3.selectAll(".slice")
-                .attr("d", newArc);
-
-            d3.selectAll("text")
-                .attr("transform", d => `translate(${newArc.centroid(d)})`)
-                .style("font-size", `${Math.max(10, newWidth / 20)}px`);
-        }
-
-        // Event listener for window resize
-        window.addEventListener("resize", resizeCharts);
-        resizeCharts(); // Initial resize
-
-        // Initialize charts
-        createPieChart(2000, "chart2000");
-        createPieChart(2024, "chart2024");
-        createPieChart(2030, "chart2030");
 
         // Populate comparison table
         function populateComparisonTable() {
@@ -800,17 +546,18 @@
         // Call the function to populate the comparison table on load
         populateComparisonTable();
 
-        // Show the timeline with events
+        // Timeline data
+        const timelineData = [
+            { year: 2000, description: "Oil sector dominates with 87% of GDP." },
+            { year: 2016, description: "Vision 2030 announced, aiming for economic diversification." },
+            { year: 2024, description: "Non-oil sector grows to 30%, tourism sector emerges." },
+            { year: 2030, description: "NEOM project launched, aiming to transform the economy." }
+        ];
+
+        // Populate timeline
         function populateTimeline() {
             const timelineContainer = d3.select("#timeline");
-            const events = [
-                { year: 2000, description: "Oil sector dominates with 87% of GDP." },
-                { year: 2016, description: "Vision 2030 announced, aiming for economic diversification." },
-                { year: 2024, description: "Non-oil sector grows to 30%, tourism sector emerges." },
-                { year: 2030, description: "NEOM project launched, aiming to transform the economy." }
-            ];
-
-            events.forEach((event, index) => {
+            timelineData.forEach((event, index) => {
                 const container = timelineContainer.append("div")
                     .attr("class", index % 2 === 0 ? "timeline-container left" : "timeline-container right");
 
@@ -822,6 +569,95 @@
 
         // Call the function to populate the timeline on load
         populateTimeline();
+
+        // Line chart data preparation
+        const lineChartData = [
+            { year: 2000, oil: 87, nonOil: 6, public: 7, tourism: 0, technology: 0 },
+            { year: 2024, oil: 50, nonOil: 30, public: 5, tourism: 10, technology: 5 },
+            { year: 2030, oil: 35, nonOil: 35, public: 5, tourism: 15, technology: 10 }
+        ];
+
+        // Create line chart
+        function createLineChart() {
+            const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+            const lineWidth = 800 - margin.left - margin.right;
+            const lineHeight = 400 - margin.top - margin.bottom;
+
+            const svg = d3.select("#line-chart").append("svg")
+                .attr("width", lineWidth + margin.left + margin.right)
+                .attr("height", lineHeight + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleLinear()
+                .domain(d3.extent(lineChartData, d => d.year))
+                .range([0, lineWidth]);
+
+            const y = d3.scaleLinear()
+                .domain([0, 100])
+                .range([lineHeight, 0]);
+
+            svg.append("g")
+                .attr("transform", `translate(0,${lineHeight})`)
+                .call(d3.axisBottom(x).ticks(5));
+
+            svg.append("g")
+                .call(d3.axisLeft(y).ticks(10));
+
+            const line = d3.line()
+                .x(d => x(d.year))
+                .y(d => y(d.oil));
+
+            svg.append("path")
+                .datum(lineChartData)
+                .attr("fill", "none")
+                .attr("stroke", "#FF6384")
+                .attr("stroke-width", 1.5)
+                .attr("d", line);
+
+            // Add other lines for non-oil, public, tourism, and technology
+            const sectors = ["nonOil", "public", "tourism", "technology"];
+            const colors = ["#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF"];
+            sectors.forEach((sector, index) => {
+                const sectorLine = d3.line()
+                    .x(d => x(d.year))
+                    .y(d => y(d[sector]));
+
+                svg.append("path")
+                    .datum(lineChartData)
+                    .attr("fill", "none")
+                    .attr("stroke", colors[index])
+                    .attr("stroke-width", 1.5)
+                    .attr("d", sectorLine);
+            });
+
+            // Add legend
+            const legend = svg.append("g")
+                .attr("transform", `translate(${lineWidth - 100}, 20)`);
+
+            sectors.forEach((sector, index) => {
+                legend.append("rect")
+                    .attr("x", 0)
+                    .attr("y", index * 20)
+                    .attr("width", 18)
+                    .attr("height", 18)
+                    .style("fill", colors[index]);
+
+                legend.append("text")
+                    .attr("x", 25)
+                    .attr("y", index * 20 + 12)
+                    .text(sector.charAt(0).toUpperCase() + sector.slice(1));
+            });
+        }
+
+        // Show line chart on button click
+        d3.select("#showLineChart").on("click", () => {
+            const lineChart = d3.select("#line-chart");
+            lineChart.style("display", lineChart.style("display") === "none" ? "block" : "none");
+            if (lineChart.style("display") === "block") {
+                createLineChart();
+            }
+        });
 
         // Finalize the setup
         console.log("Interactive GDP Visualization Initialized!");
